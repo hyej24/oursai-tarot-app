@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Gowun Batang", serif;
+  --font-sans: "Noto Sans KR", system-ui, sans-serif;
+}
+
+/* Global text wrap and keeping whole words together for natural Korean line wraps */
+html, body, p, h1, h2, h3, h4, h5, h6, span, div, label, input, textarea {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* For buttons and interactive links, keep short phrases on a single line where possible, with minimal width and padding */
+button, .btn {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+button.follow-up-question-button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+button.follow-up-question-button span {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
