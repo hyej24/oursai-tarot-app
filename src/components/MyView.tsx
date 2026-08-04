@@ -36,7 +36,7 @@ export function MyView() {
 
   const claimAdReward = () => {
     const today = getKstDateKey();
-    if (false && localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
+    if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
       setFeedbackMessage('오늘 광고 보상은 이미 받았어요.');
       setTimeout(() => setFeedbackMessage(null), 2500);
       return;

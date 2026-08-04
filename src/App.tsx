@@ -170,30 +170,6 @@ export default function App() {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const debugTokens = params.get('tokens') || params.get('debugTokens');
-      const testTokens = params.get('testTokens');
-      const testPin = params.get('pin');
-      const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-      if (isLocalPreview && debugTokens !== null) {
-        const nextTokens = Number(debugTokens);
-        if (Number.isFinite(nextTokens)) {
-          localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(Math.max(0, Math.floor(nextTokens))));
-          window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`);
-        }
-      }
-
-      if (testPin === 'sodam' && testTokens !== null) {
-        const nextTokens = Number(testTokens);
-        if (Number.isFinite(nextTokens)) {
-          localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(Math.max(0, Math.floor(nextTokens))));
-          params.delete('testTokens');
-          params.delete('pin');
-          const nextSearch = params.toString();
-          window.history.replaceState(null, '', `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`);
-        }
-      }
-
       const sharedReadingParam = params.get(SHARED_READING_QUERY_KEY);
       if (sharedReadingParam) {
         const sharedReading = decodeSharedReading(sharedReadingParam);
@@ -350,6 +326,11 @@ export default function App() {
   };
 
   const grantAdReadingPass = () => {
+    const today = getKstDateKey();
+    if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
+      return false;
+    }
+    localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
     addGyeolTokens(AD_GYEOL_TOKEN_REWARD);
     continuePendingQuestion();
     return true;
