@@ -1,4 +1,4 @@
-const DEFAULT_REMOTE_API_BASE_URL = 'https://oursai-tarot.onrender.com';
+const DEFAULT_REMOTE_API_BASE_URL = 'https://oursai-tarot-app.onrender.com';
 
 const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
 

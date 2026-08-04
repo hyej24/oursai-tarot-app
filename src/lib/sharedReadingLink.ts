@@ -63,7 +63,7 @@ export function decodeSharedReading(value: string): SharedReadingPayload | null 
 export function buildSharedReadingUrl(reading: SavedReading): string {
   const baseUrl = typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}`
-    : 'https://oursai-tarot.onrender.com/';
+    : 'https://oursai-tarot-app.onrender.com/';
   const url = new URL(baseUrl);
   url.searchParams.set(SHARED_READING_QUERY_KEY, encodeSharedReading(reading));
   return url.toString();

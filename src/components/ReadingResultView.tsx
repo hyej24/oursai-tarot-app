@@ -90,8 +90,6 @@ interface PaidReadingResult {
 const readingResultCache = new Map<string, StandardReadingResult>();
 const readingRequestCache = new Map<string, Promise<StandardReadingResult>>();
 const chargedReadingKeys = new Set<string>();
-const REMOTE_RENDER_API_BASE_URL = 'https://oursai-tarot.onrender.com';
-
 const isFreeTemperatureMenu = (menuId: string) => menuId === 'daily-temperature' || menuId === 'relation-temp';
 
 function replaceHanjaInKoreanText(text: string): string {
@@ -249,9 +247,7 @@ function getStoredDailyTemperatureReading(card: TarotCard | undefined): Standard
 
 async function postTarotReadingWithFallback(payload: Record<string, unknown>) {
   const primaryUrl = apiPath('/api/tarot/read');
-  const remoteUrl = `${REMOTE_RENDER_API_BASE_URL}/api/tarot/read`;
-  const isRenderHost = typeof window !== 'undefined' && window.location.hostname.endsWith('onrender.com');
-  const urls = isRenderHost ? [primaryUrl] : Array.from(new Set([primaryUrl, remoteUrl]));
+  const urls = [primaryUrl];
   let lastError: Error | null = null;
 
   for (const url of urls) {
