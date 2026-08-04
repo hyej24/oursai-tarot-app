@@ -171,6 +171,8 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search);
       const debugTokens = params.get('tokens') || params.get('debugTokens');
+      const testTokens = params.get('testTokens');
+      const testPin = params.get('pin');
       const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
       if (isLocalPreview && debugTokens !== null) {
@@ -178,6 +180,17 @@ export default function App() {
         if (Number.isFinite(nextTokens)) {
           localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(Math.max(0, Math.floor(nextTokens))));
           window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`);
+        }
+      }
+
+      if (testPin === 'sodam' && testTokens !== null) {
+        const nextTokens = Number(testTokens);
+        if (Number.isFinite(nextTokens)) {
+          localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(Math.max(0, Math.floor(nextTokens))));
+          params.delete('testTokens');
+          params.delete('pin');
+          const nextSearch = params.toString();
+          window.history.replaceState(null, '', `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`);
         }
       }
 
