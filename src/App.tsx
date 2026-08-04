@@ -96,6 +96,31 @@ export default function App() {
     return nextBalance;
   };
 
+  const getTodaySavedTemperatureCard = () => {
+    try {
+      const rawSavedTemperature = localStorage.getItem(DAILY_TEMPERATURE_READING_KEY);
+      const savedTemperature = rawSavedTemperature ? JSON.parse(rawSavedTemperature) : null;
+      if (
+        savedTemperature?.date !== getKstDateKey() ||
+        savedTemperature?.version !== DAILY_TEMPERATURE_READING_VERSION
+      ) {
+        return null;
+      }
+
+      const savedCard = TAROT_DECK.find(card => Number(card.id) === Number(savedTemperature.cardId));
+      if (!savedCard) {
+        return null;
+      }
+
+      return {
+        ...savedCard,
+        isReversed: Boolean(savedTemperature.isReversed)
+      };
+    } catch {
+      return null;
+    }
+  };
+
   const getSafeProfiles = (storedVal: string | null): PartnerProfile[] => {
     if (!storedVal) return [];
     try {
@@ -244,7 +269,6 @@ export default function App() {
   const startDailyTemperatureFlow = () => {
     setSharedReadingResult(null);
     const question = '오늘, 그 사람과 나의 온도는 몇 도일까요?';
-    const today = getKstDateKey();
 
     setTarotQuestion(question);
     setSelectedSituation(question);
@@ -252,20 +276,11 @@ export default function App() {
     setSelectedMenuTitle('오늘의 온도 리딩');
     setActivePartnerProfile(undefined);
 
-    try {
-      const rawSavedTemperature = localStorage.getItem(DAILY_TEMPERATURE_READING_KEY);
-      const savedTemperature = rawSavedTemperature ? JSON.parse(rawSavedTemperature) : null;
-      const savedCard = savedTemperature?.date === today && savedTemperature?.version === DAILY_TEMPERATURE_READING_VERSION
-        ? TAROT_DECK.find(card => card.id === Number(savedTemperature.cardId))
-        : undefined;
-
-      if (savedCard) {
-        setSelectedCards([{ ...savedCard, isReversed: Boolean(savedTemperature.isReversed) }]);
-        setCurrentStep('reading-result');
-        return;
-      }
-    } catch {
-      // If older saved data is malformed, just let the user draw today's card again.
+    const savedCard = getTodaySavedTemperatureCard();
+    if (savedCard) {
+      setSelectedCards([savedCard]);
+      setCurrentStep('reading-result');
+      return;
     }
 
     setSelectedCards([]);
@@ -428,6 +443,15 @@ export default function App() {
 
   // Complete drawing callback
   const handleCompleteTarotDraw = (cards: TarotCard[]) => {
+    if (selectedMenuId === 'daily-temperature') {
+      const savedCard = getTodaySavedTemperatureCard();
+      if (savedCard) {
+        setSelectedCards([savedCard]);
+        setCurrentStep('reading-result');
+        return;
+      }
+    }
+
     if (selectedMenuId === 'daily-temperature' && cards[0]) {
       localStorage.setItem(DAILY_TEMPERATURE_READING_KEY, JSON.stringify({
         date: getKstDateKey(),

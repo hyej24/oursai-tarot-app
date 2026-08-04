@@ -205,7 +205,7 @@ function hasUsableReading(data: StandardReadingResult | null | undefined, menuId
 }
 
 function getStoredDailyTemperatureReading(card: TarotCard | undefined): StandardReadingResult | null {
-  if (!card || typeof window === 'undefined') {
+  if (typeof window === 'undefined') {
     return null;
   }
 
@@ -224,14 +224,6 @@ function getStoredDailyTemperatureReading(card: TarotCard | undefined): Standard
       return null;
     }
 
-    if (Number(saved?.cardId) !== Number(card.id)) {
-      return null;
-    }
-
-    if (Boolean(saved?.isReversed) !== Boolean(card.isReversed)) {
-      return null;
-    }
-
     const savedReading = saved?.readingResult || saved?.reading || saved?.result || null;
     if (!savedReading) {
       return null;
@@ -240,11 +232,7 @@ function getStoredDailyTemperatureReading(card: TarotCard | undefined): Standard
     const normalized = normalizeApiReading(savedReading);
     const temperature = Number(normalized.temperature);
     if (
-      !normalized.oneLineConclusion ||
-      !normalized.card1Meaning ||
-      !normalized.card2Meaning ||
-      !normalized.caution ||
-      !normalized.actionAdvice ||
+      !hasUsableReading(normalized, 'daily-temperature') ||
       !Number.isFinite(temperature)
     ) {
       return null;
