@@ -350,11 +350,6 @@ export default function App() {
   };
 
   const grantAdReadingPass = () => {
-    const today = getKstDateKey();
-    if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
-      return false;
-    }
-    localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
     addGyeolTokens(AD_GYEOL_TOKEN_REWARD);
     continuePendingQuestion();
     return true;
