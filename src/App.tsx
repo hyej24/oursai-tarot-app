@@ -967,6 +967,7 @@ export default function App() {
                 onGoToRecords={handleGoToRecordsTab}
                 onAskFollowUp={handlePaidFollowUpQuestion}
                 onReadingSuccess={consumeReadingPassAfterSuccess}
+                onChargeQuestionPass={() => grantPaidReadingPass(1)}
                 onShareReward={grantShareReadingPass}
                 questionPassBalance={gyeolTokenBalance}
                 initialReadingResult={sharedReadingResult}
