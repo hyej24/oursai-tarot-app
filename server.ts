@@ -1703,7 +1703,7 @@ app.get("/api/health", (req, res) => {
     useResponseSchema: GEMINI_USE_RESPONSE_SCHEMA,
     useJsonMime: GEMINI_USE_JSON_MIME,
     thinkingBudget: GEMINI_THINKING_BUDGET,
-    version: "render-api-fix-20260805-temperature-records"
+    version: "stable-api-url-fixed-no-reading-fail-20260805-2"
   });
 });
 
