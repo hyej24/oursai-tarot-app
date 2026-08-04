@@ -20,7 +20,7 @@ services:
       - key: GEMINI_DEEP_MAX_OUTPUT_TOKENS
         value: "2600"
       - key: GEMINI_FALLBACK_MODELS
-        value: gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.0-flash-lite
+        value: gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-flash-latest
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: API_RATE_LIMIT_WINDOW_MS

@@ -465,6 +465,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingStep, setLoadingStep] = useState<string>("선택한 카드의 흐름을 연결하고 있어요.");
   const [loadingSub, setLoadingSub] = useState<string>("질문과 카드의 의미를 함께 살펴보는 중이에요. 잠시만 기다려 주세요.");
+  const [loadingSession, setLoadingSession] = useState<number>(0);
   
   // Standard free results state
   const [result, setResult] = useState<StandardReadingResult | null>(null);
@@ -523,14 +524,20 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       return;
     }
 
-    setLoadingSub(current => pickNextLoadingMessage(current));
+    const startedAt = Date.now();
 
     const timer = window.setInterval(() => {
       setLoadingSub(current => pickNextLoadingMessage(current));
-    }, 2400);
+      if (Date.now() - startedAt > 9000) {
+        setLoadingStep(props.menuId === 'daily-temperature'
+          ? "오늘 온도 리딩을 조금 더 다듬고 있어요."
+          : "리딩 문장을 조금 더 자연스럽게 다듬고 있어요."
+        );
+      }
+    }, 1800);
 
     return () => window.clearInterval(timer);
-  }, [loading]);
+  }, [loading, loadingSession, props.menuId]);
 
   // Robust decoupled fetch reading supporting auto retries
   const fetchReading = async (isRetry = false) => {
@@ -548,6 +555,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
     inFlightKeyRef.current = fetchKey;
     fetchKeyRef.current = fetchKey;
+    setLoadingSession(current => current + 1);
 
     const loadingStartedAt = Date.now();
     const minimumLoadingMs = isRetry ? 250 : 350;
