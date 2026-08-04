@@ -1703,7 +1703,7 @@ app.get("/api/health", (req, res) => {
     useResponseSchema: GEMINI_USE_RESPONSE_SCHEMA,
     useJsonMime: GEMINI_USE_JSON_MIME,
     thinkingBudget: GEMINI_THINKING_BUDGET,
-    version: "release-candidate-no-test-token-20260805-1"
+    version: "release-candidate-share-daily-20260805-1"
   });
 });
 
