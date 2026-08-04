@@ -964,7 +964,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   }
 
   // Rendering Standard Error Views
-  if (freeError && !result) {
+  if (false && freeError && !result) {
     return (
       <div className="flex-grow flex flex-col items-center justify-center py-24 px-8 text-center bg-[#FAF9F5] text-gray-800 animate-fadeIn h-full">
         <AlertTriangle className="w-10 h-10 text-[#BD6B65] mb-4 animate-bounce" />
@@ -1002,10 +1002,15 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     );
   }
 
-  const finalTemp = result?.temperature ?? 45;
-  const displayMenuTitle = result?.questionCategory || props.menuTitle;
   const isDailyTemperature = props.menuId === 'daily-temperature';
-  const dailyTemperatureMeaning = (result?.card1Meaning || result?.totalFlow || result?.oneLineConclusion || '')
+  const activeResult = result || (
+    isDailyTemperature
+      ? generateDailyTemperatureReading(props.cards[0])
+      : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle)
+  );
+  const finalTemp = activeResult.temperature ?? 45;
+  const displayMenuTitle = activeResult.questionCategory || props.menuTitle;
+  const dailyTemperatureMeaning = (activeResult.card1Meaning || activeResult.totalFlow || activeResult.oneLineConclusion || '')
     .split(/\n+/)
     .map(line => line.trim())
     .filter(Boolean)
@@ -1037,14 +1042,14 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       </div>
 
       {/* #2. 질문에 대한 답 */}
-      {result?.oneLineConclusion && (
+      {activeResult.oneLineConclusion && (
         <div className="p-6 rounded-2xl bg-[#F3EFE6] border border-[#EAE3D2] relative overflow-hidden mb-6 text-center shadow-xs">
           <div className="absolute right-4 top-4">
             <Heart className="w-5 h-5 text-[#E6A19C]/40 fill-[#E6A19C]/20 animate-pulse" />
           </div>
           <span className="text-[13px] font-serif font-bold tracking-widest text-[#8A7A71]">2. 질문에 대한 답</span>
           <h2 className="font-serif text-[18px] font-bold text-[#BD6B65] mt-1.5 leading-[1.55] break-keep px-2">
-            “{result.oneLineConclusion}”
+            “{activeResult.oneLineConclusion}”
           </h2>
           {!props.menuId.startsWith('question-') && !isDailyTemperature && (
             <>
@@ -1087,8 +1092,8 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
         <div className="space-y-3">
           {props.cards.map((card, idx) => {
-            const aiRole = typeof result?.cards?.[idx]?.role === 'string'
-              ? result.cards[idx].role.trim()
+            const aiRole = typeof activeResult.cards?.[idx]?.role === 'string'
+              ? activeResult.cards[idx].role.trim()
               : '';
             const cleanAiRole = aiRole
               .replace(/^(첫|두|세)\s*번째\s*카드\s*[:：]\s*/g, '')
@@ -1102,10 +1107,10 @@ export function ReadingResultView(props: ReadingResultViewProps) {
             }
 
             const interpretationText = idx === 0 
-              ? result?.card1Meaning 
+              ? activeResult.card1Meaning 
               : idx === 1 
-              ? result?.card2Meaning 
-              : result?.card3Meaning;
+              ? activeResult.card2Meaning 
+              : activeResult.card3Meaning;
 
             return (
               <div
@@ -1139,65 +1144,65 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         </div>
       </div>
 
-      {isDailyTemperature && result?.card2Meaning && (
+      {isDailyTemperature && activeResult.card2Meaning && (
         <div className="p-4 rounded-xl bg-white/70 border border-[#EAE3D2] mb-4">
           <h4 className="font-serif text-[15px] font-bold text-[#3C2F2F] mb-2">
             5. 그 사람이 오늘 보일 수 있는 모습
           </h4>
           <p className="text-[14.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-            {result.card2Meaning}
+            {activeResult.card2Meaning}
           </p>
         </div>
       )}
 
-      {isDailyTemperature && result?.caution && (
+      {isDailyTemperature && activeResult.caution && (
         <div className="mb-4 rounded-xl border border-[#F2D1CD] bg-[#FADBD8]/25 p-4">
           <h4 className="mb-2 font-serif text-[15px] font-bold text-[#C0392B]">
             6. 오늘 조심할 점
           </h4>
           <p className="text-[14.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-            {result.caution}
+            {activeResult.caution}
           </p>
         </div>
       )}
 
-      {isDailyTemperature && result?.actionAdvice && (
+      {isDailyTemperature && activeResult.actionAdvice && (
         <div className="mb-6 rounded-[20px] border border-[#E8D7C5] bg-[linear-gradient(135deg,#FFFDF8_0%,#F8EFE4_100%)] p-4 shadow-[0_8px_18px_rgba(130,93,74,0.045)]">
           <h4 className="mb-2 font-serif text-[15px] font-bold text-[#8F6B58]">
             7. 오늘 해보면 좋은 행동
           </h4>
           <p className="text-[14.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-            {result.actionAdvice}
+            {activeResult.actionAdvice}
           </p>
         </div>
       )}
 
       {/* #4. 전체 흐름 */}
-      {!isDailyTemperature && result?.totalFlow && (
+      {!isDailyTemperature && activeResult.totalFlow && (
         <div className="p-5 rounded-2xl bg-[#F3EFE6]/30 border border-[#EAE3D2] border-dashed mb-6">
           <h4 className="font-serif text-[15px] font-bold text-[#3C2F2F] tracking-wide uppercase mb-2 flex items-center gap-1.5">
             <span>5. 지금 흐름을 정리하면</span>
           </h4>
           <p className="text-[15.5px] text-[#5C4F4F] leading-relaxed font-sans block break-keep whitespace-pre-line">
-            {result.totalFlow}
+            {activeResult.totalFlow}
           </p>
         </div>
       )}
 
       {/* #5. 지금 주의할 점 */}
-      {!isDailyTemperature && result?.caution && (
+      {!isDailyTemperature && activeResult.caution && (
         <div className="p-4 rounded-xl bg-[#FADBD8]/25 border border-[#F2D1CD] mb-6 space-y-1">
           <span className="text-[15px] font-bold text-[#C0392B] font-serif flex items-center gap-1">
             6. 지금 주의할 점
           </span>
           <p className="text-[15.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-            {result.caution}
+            {activeResult.caution}
           </p>
         </div>
       )}
 
       {/* #6. 지금 필요한 핵심 조언 */}
-      {!isDailyTemperature && result?.actionAdvice && (() => {
+      {!isDailyTemperature && activeResult.actionAdvice && (() => {
         let adviceTitle = "7. 지금 필요한 조언";
         if (!props.menuId.startsWith('question-')) {
           if (props.menuId === 'dating-luck') adviceTitle = "오늘의 연애 조언";
@@ -1214,13 +1219,13 @@ export function ReadingResultView(props: ReadingResultViewProps) {
             </h4>
             <div className="w-full h-[1px] bg-[#EAE3D2] my-2" />
             <p className="text-[15.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-              {result.actionAdvice}
+              {activeResult.actionAdvice}
             </p>
           </div>
         );
       })()}
 
-      {!isDailyTemperature && result?.followUpQuestions && result.followUpQuestions.length > 0 && (
+      {!isDailyTemperature && activeResult.followUpQuestions && activeResult.followUpQuestions.length > 0 && (
         <div className="relative w-full max-w-full overflow-visible p-5 rounded-2xl bg-[#FFFDFC] border border-[#E6A19C] mb-6">
           <h4 className="font-serif text-sm font-bold text-[#3C2F2F]">
             이어서 보면 더 선명해지는 질문
@@ -1263,7 +1268,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
           )}
 
           <div className="mt-3 space-y-2">
-            {result.followUpQuestions.slice(0, 3).map((followUp, idx) => (
+            {activeResult.followUpQuestions.slice(0, 3).map((followUp, idx) => (
               <button
                 key={`follow-up-${idx}`}
                 type="button"
