@@ -1,0 +1,15 @@
+packages:
+  - "."
+
+onlyBuiltDependencies:
+  - "@firebase/util"
+  - "@sentry/cli"
+  - "@swc/core"
+  - esbuild
+  - protobufjs
+allowBuilds:
+  '@firebase/util': true
+  '@sentry/cli': true
+  '@swc/core': true
+  esbuild: true
+  protobufjs: true

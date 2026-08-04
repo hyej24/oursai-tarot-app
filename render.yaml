@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: oursai-tarot-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
+    startCommand: pnpm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_INTENT_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_ENABLE_REPAIR
+        value: "false"
+      - key: GEMINI_MAX_OUTPUT_TOKENS
+        value: "8192"
+      - key: GEMINI_DEEP_MAX_OUTPUT_TOKENS
+        value: "2600"
+      - key: GEMINI_FALLBACK_MODELS
+        value: gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.0-flash-lite
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: API_RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: API_RATE_LIMIT_MAX
+        value: "30"
+      - key: GEMINI_API_KEY
+        sync: false
