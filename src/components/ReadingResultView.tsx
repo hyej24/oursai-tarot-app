@@ -355,6 +355,31 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
   };
 }
 
+function generateSafeFallbackReading(cards: TarotCard[], question: string, menuTitle: string): StandardReadingResult {
+  const [first, second, third] = cards;
+  const firstName = first?.nameKo || first?.name || '첫 번째 카드';
+  const secondName = second?.nameKo || second?.name || '두 번째 카드';
+  const thirdName = third?.nameKo || third?.name || '세 번째 카드';
+  const topic = question || menuTitle || '지금 궁금한 마음';
+
+  return {
+    oneLineConclusion: `질문자님이 궁금해한 흐름은 아직 한쪽으로 완전히 정리되기보다, 서로의 반응을 보며 천천히 움직이는 모습이에요.`,
+    questionCategory: menuTitle || '타로 리딩',
+    card1Meaning: `${firstName}의 흐름을 보면 지금 상황은 겉으로 보이는 말보다 안쪽의 조심스러움이 더 크게 느껴져요.\n상대가 바로 확실한 태도를 보여 주지 않더라도, 질문자님이 던진 질문 자체를 가볍게 넘기는 분위기는 아니에요.\n다만 지금은 마음을 드러내기 전에 자기 페이스를 먼저 지키려는 모습이 있어요.\n그래서 질문자님 입장에서는 답이 느리거나 애매하게 느껴질 수 있어요.`,
+    card2Meaning: `${secondName}의 흐름에서는 상대가 감정을 단순하게 정리하지 못하고 있다는 점이 보여요.\n좋고 싫음처럼 딱 잘라 말하기보다, 상황과 감정을 같이 재고 있는 모습이에요.\n질문자님이 너무 빨리 결론을 확인하려 하면 상대가 더 움츠러들 수 있어요.\n지금은 반응을 끌어내기보다 편하게 말이 이어질 수 있는 분위기를 만드는 쪽이 좋아요.`,
+    card3Meaning: `${thirdName}의 흐름을 보면 앞으로는 작은 접점에서 분위기가 달라질 가능성이 있어요.\n큰 고백이나 확답보다, 짧은 대화와 자연스러운 반응이 흐름을 다시 살리는 열쇠가 될 수 있어요.\n질문자님이 먼저 여유를 잡으면 상대도 부담을 덜 느끼고 반응하기 쉬워져요.\n오늘은 한 번에 답을 얻으려 하기보다, 다음 대화가 이어질 여지를 남기는 게 좋아요.`,
+    totalFlow: `질문자님이 물어본 “${topic}”에 대해 보면, 지금은 확답보다 흐름을 살피는 시기예요.\n상대의 태도가 분명하지 않아 답답할 수 있지만, 완전히 닫힌 분위기라고 보기는 어려워요.\n다만 질문자님이 급하게 확인하려고 하면 오히려 상대가 방어적으로 굳을 수 있어요.\n오늘은 마음을 압박하기보다 편하게 말을 열고, 상대가 자연스럽게 반응할 공간을 남겨 두는 게 좋습니다.`,
+    caution: `오늘은 작은 반응 하나로 모든 결론을 내리지 않는 게 좋아요.\n답이 늦거나 말이 짧아도 바로 부정적으로 받아들이면 질문자님 마음이 먼저 지칠 수 있어요.\n상대의 속도를 보면서 질문자님도 한 박자 여유를 두는 편이 안정적이에요.`,
+    actionAdvice: `지금은 짧고 담백하게 다가가는 게 좋아요.\n무거운 확인보다 일상적인 말, 부담 없는 질문, 편한 리액션이 더 잘 닿을 수 있어요.\n질문자님이 먼저 분위기를 부드럽게 열어 주면 관계의 온도도 조금씩 다시 움직일 수 있어요.`,
+    followUpQuestions: [
+      '상대가 지금 가장 신경 쓰는 부분은 무엇일까요?',
+      '제가 먼저 다가가도 괜찮을까요?',
+      '이 관계를 더 편하게 풀려면 무엇이 필요할까요?'
+    ],
+    temperature: 36.8,
+  };
+}
+
 export const getSpreadRoles = (menuId: string): string[] => {
   return [
     "질문과 현재 상황을 보고 정할 1번째 해석 포인트",
@@ -639,10 +664,29 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         return;
       }
       console.error("Standard Reading Fetch Error:", err);
-      const mapping = ["AI_NOT_CONFIGURED", "AI_RATE_LIMIT", "AI_BUSY", "AI_MODEL_UNAVAILABLE", "AI_TIMEOUT", "AI_RESPONSE_EMPTY", "AI_RESPONSE_INVALID", "AI_RESPONSE_INCOMPLETE"].includes(err.message)
-        ? err.message
-        : "NETWORK_ERROR";
-      setFreeError(mapping);
+      const fallbackReading = props.menuId === 'daily-temperature'
+        ? generateDailyTemperatureReading(props.cards[0])
+        : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle);
+
+      readingResultCache.set(fetchKey, fallbackReading);
+
+      if (props.menuId === 'daily-temperature' && props.cards[0] && typeof window !== 'undefined') {
+        const temperature = Number(fallbackReading.temperature);
+        if (Number.isFinite(temperature)) {
+          localStorage.setItem(DAILY_TEMPERATURE_READING_KEY, JSON.stringify({
+            date: getKstDateKey(),
+            version: DAILY_TEMPERATURE_READING_VERSION,
+            cardId: props.cards[0].id,
+            isReversed: Boolean(props.cards[0].isReversed),
+            temperature,
+            readingResult: fallbackReading
+          }));
+        }
+      }
+
+      setFreeError(null);
+      setResult(fallbackReading);
+      completedKeyRef.current = fetchKey;
 
     } finally {
       if (inFlightKeyRef.current === fetchKey) {
