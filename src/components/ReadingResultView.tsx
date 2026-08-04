@@ -930,7 +930,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         });
         const rewarded = props.onShareReward?.();
         setShowShareModal(false);
-        alert(rewarded ? '공유 완료! 질문권 1개가 추가됐어요.' : '오늘 공유 보상은 이미 받았어요.');
+        alert(rewarded ? '앱 공유 보상으로 질문권 1개가 추가됐어요.' : '오늘 앱 공유 보상은 이미 받았어요.');
         return;
       }
 
@@ -1280,7 +1280,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
           className="w-full py-3.5 rounded-xl text-[15px] font-serif flex items-center justify-center space-x-2 transition-all bg-[#FAF9F5] border border-[#E6A19C] text-[#BD6B65] hover:bg-[#FADBD8]/25 cursor-pointer"
         >
           <Share2 className="w-3.5 h-3.5" />
-          <span>앱 공유하기</span>
+          <span>앱 공유하고 질문권 +1</span>
         </button>
         <button
           onClick={handleSaveDiary}

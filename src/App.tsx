@@ -325,13 +325,21 @@ export default function App() {
     setActiveTab('home');
   };
 
-  const grantAdReadingPass = () => {
+  const grantAdTokenOnly = () => {
     const today = getKstDateKey();
     if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
       return false;
     }
     localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
     addGyeolTokens(AD_GYEOL_TOKEN_REWARD);
+    return true;
+  };
+
+  const grantAdReadingPass = () => {
+    const granted = grantAdTokenOnly();
+    if (!granted) {
+      return false;
+    }
     continuePendingQuestion();
     return true;
   };
@@ -348,6 +356,24 @@ export default function App() {
     localStorage.setItem(DAILY_SHARE_REWARD_DATE_KEY, today);
     addGyeolTokens(SHARE_READING_PASS_REWARD);
     return true;
+  };
+
+  const shareAppAndGrantReadingPass = async () => {
+    const title = '타로 : 우리 사이 온도';
+    const text = '오늘 우리 사이 온도와 마음의 흐름을 확인해보세요.';
+    const url = window.location.origin;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+      }
+    } catch {
+      return null;
+    }
+
+    return grantShareReadingPass();
   };
 
   const handlePaidFollowUpQuestion = (question: string) => {
@@ -538,7 +564,12 @@ export default function App() {
               )}
               
               {activeTab === 'my' && (
-                <MyView />
+                <MyView
+                  gyeolTokenBalance={gyeolTokenBalance}
+                  dailyFreeAvailable={!firstFreeReadingUsed}
+                  onClaimAdReward={grantAdTokenOnly}
+                  onShareAppReward={shareAppAndGrantReadingPass}
+                />
               )}
             </div>
           )}
@@ -1013,6 +1044,25 @@ export default function App() {
                   className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold"
                 >
                   광고 보고 질문권 {AD_GYEOL_TOKEN_REWARD}개 받기
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const granted = await shareAppAndGrantReadingPass();
+                    if (granted === null) {
+                      alert('공유가 취소됐어요.');
+                      return;
+                    }
+                    if (!granted) {
+                      alert('오늘 앱 공유 보상은 이미 받았어요.');
+                      return;
+                    }
+                    continuePendingQuestion();
+                  }}
+                  className="w-full py-3 rounded-xl bg-white border border-[#E6A19C] text-[#BD6B65] text-[14px] font-serif font-bold"
+                >
+                  앱 공유하고 질문권 +{SHARE_READING_PASS_REWARD}
+                  <span className="ml-1 text-[11px] font-normal text-[#A98E84]">1일 1회</span>
                 </button>
                 <button
                   type="button"

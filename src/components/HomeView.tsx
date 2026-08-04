@@ -178,10 +178,10 @@ export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0 }: HomeViewPr
 
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex h-[32px] min-w-[112px] items-center justify-center rounded-full border border-[#E2B9AE] bg-white/58 px-4 font-serif text-[13.5px] font-bold text-[#7A5C52] shadow-[0_6px_18px_rgba(92,62,46,0.04)]">
-          매일 1개 무료
+          오늘 무료 1개
         </div>
         <div className="flex h-[32px] min-w-[112px] items-center justify-center rounded-full border border-[#E2B9AE] bg-white/58 px-4 font-serif text-[13.5px] font-bold text-[#C87470] shadow-[0_6px_18px_rgba(92,62,46,0.04)]">
-          남은 질문 {gyeolTokenBalance}개
+          추가 질문권 {gyeolTokenBalance}개
         </div>
       </div>
 

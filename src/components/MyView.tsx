@@ -1,49 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import { Gem } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gem, Share2 } from 'lucide-react';
 import {
   AD_GYEOL_TOKEN_REWARD,
-  DAILY_AD_REWARD_DATE_KEY,
-  DAILY_FREE_READING_KEY,
-  GYEOL_TOKEN_BALANCE_KEY,
   QUESTION_PASS_PACKAGES,
-  READING_TOKEN_COST
+  READING_TOKEN_COST,
+  SHARE_READING_PASS_REWARD
 } from '../lib/appConstants';
-import { getKstDateKey } from '../lib/kstDate';
 
-export function MyView() {
-  const [gyeolTokenBalance, setGyeolTokenBalance] = useState(0);
-  const [dailyFreeAvailable, setDailyFreeAvailable] = useState(true);
+interface MyViewProps {
+  gyeolTokenBalance: number;
+  dailyFreeAvailable: boolean;
+  onClaimAdReward: () => boolean;
+  onShareAppReward: () => Promise<boolean | null>;
+}
+
+export function MyView({
+  gyeolTokenBalance,
+  dailyFreeAvailable,
+  onClaimAdReward,
+  onShareAppReward
+}: MyViewProps) {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const today = getKstDateKey();
-    setGyeolTokenBalance(Number(localStorage.getItem(GYEOL_TOKEN_BALANCE_KEY) || '0'));
-    setDailyFreeAvailable(localStorage.getItem(DAILY_FREE_READING_KEY) !== today);
-  }, []);
-
-  const addQuestionPasses = (amount: number, message: string) => {
-    const nextBalance = Number(localStorage.getItem(GYEOL_TOKEN_BALANCE_KEY) || '0') + amount;
-    localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(nextBalance));
-    setGyeolTokenBalance(nextBalance);
+  const showFeedback = (message: string) => {
     setFeedbackMessage(message);
     setTimeout(() => setFeedbackMessage(null), 2500);
   };
 
   const showPaymentPendingMessage = () => {
-    setFeedbackMessage('결제 기능은 지금 준비 중이에요.');
-    setTimeout(() => setFeedbackMessage(null), 2500);
+    showFeedback('결제 기능은 지금 준비 중이에요.');
   };
 
   const claimAdReward = () => {
-    const today = getKstDateKey();
-    if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
-      setFeedbackMessage('오늘 광고 보상은 이미 받았어요.');
-      setTimeout(() => setFeedbackMessage(null), 2500);
+    const granted = onClaimAdReward();
+    showFeedback(
+      granted
+        ? `광고 보상 질문권 ${AD_GYEOL_TOKEN_REWARD}개가 지급됐어요.`
+        : '오늘 광고 보상은 이미 받았어요.'
+    );
+  };
+
+  const claimShareReward = async () => {
+    const granted = await onShareAppReward();
+    if (granted === null) {
+      showFeedback('공유가 취소됐어요.');
       return;
     }
 
-    localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
-    addQuestionPasses(AD_GYEOL_TOKEN_REWARD, `광고 보상 질문권 ${AD_GYEOL_TOKEN_REWARD}개가 지급됐어요.`);
+    showFeedback(
+      granted
+        ? `앱 공유 보상으로 질문권 ${SHARE_READING_PASS_REWARD}개가 지급됐어요.`
+        : '오늘 앱 공유 보상은 이미 받았어요.'
+    );
   };
 
   return (
@@ -92,8 +100,18 @@ export function MyView() {
 
         <button
           type="button"
+          onClick={claimShareReward}
+          className="mt-3 flex w-full min-h-[42px] items-center justify-center gap-2 rounded-xl border border-[#E6A19C] bg-white/70 text-[#BD6B65] text-[14px] font-serif font-bold"
+        >
+          <Share2 className="h-4 w-4" />
+          앱 공유하고 질문권 +{SHARE_READING_PASS_REWARD}
+        </button>
+        <p className="mt-1 text-[11px] text-[#B09A8E]">하루 한 번 받을 수 있어요.</p>
+
+        <button
+          type="button"
           onClick={claimAdReward}
-          className="mt-3 w-full min-h-[42px] rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold"
+          className="mt-2 w-full min-h-[42px] rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold"
         >
           광고 보고 질문권 +{AD_GYEOL_TOKEN_REWARD}
         </button>
