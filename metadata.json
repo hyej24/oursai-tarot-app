@@ -1,0 +1,6 @@
+{
+  "name": "타로 : 우리 사이 온도",
+  "description": "상대의 속마음, 오늘의 연애운, 연락 가능성 등 우리 사이의 감정적인 관계와 온도를 확인하고 나만의 감성 연애 다이어리에 기록하는 차분하고 따뜻한 타로 리딩 서비스입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
