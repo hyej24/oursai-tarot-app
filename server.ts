@@ -69,7 +69,7 @@ const rawKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 const isKeyInvalid = !rawKey || rawKey === "MY_GEMINI_API_KEY" || rawKey.trim() === "" || rawKey === "undefined" || rawKey === "null";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const GEMINI_INTENT_MODEL = process.env.GEMINI_INTENT_MODEL || "gemini-2.5-flash";
-const GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || "gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.0-flash-lite")
+const GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || "gemini-2.5-flash-lite,gemini-2.0-flash-lite,gemini-flash-latest")
   .split(",")
   .map(model => model.trim())
   .filter(Boolean);
