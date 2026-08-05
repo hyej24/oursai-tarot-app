@@ -511,10 +511,10 @@ function getDailyTemperatureCardProfile(card: TarotCard, temperature: number): D
   if (card.type === 'major' && majorProfile) {
     return reversed
       ? {
-          tone: majorProfile.tone.replace('날이에요', '흐름이 살짝 꼬여 보이는 날이에요'),
-          detail: `${majorProfile.detail}\n다만 오늘은 그 흐름이 바로 예쁘게 드러나기보다 한 번 어긋나거나 늦게 표현될 수 있어요.`,
-          person: `${majorProfile.person}\n상대가 반대로 행동해도 마음 자체를 바로 부정할 필요는 없어요.`,
-          caution: `오늘은 좋은 의도도 엇갈리게 전달될 수 있어요.\n${majorProfile.caution}`,
+          tone: majorProfile.tone,
+          detail: `${majorProfile.detail}\n다만 오늘은 그 온기가 바로 크게 드러나기보다 조금 천천히 표현될 수 있어요.\n마음이 없다는 뜻보다는 확신이나 타이밍을 조금 더 살피는 흐름에 가까워요.`,
+          person: `${majorProfile.person}\n상대의 표현이 일정하지 않아도 마음 자체를 바로 부정할 필요는 없어요.`,
+          caution: `오늘은 좋은 의도도 너무 서두르면 부담으로 느껴질 수 있어요.\n${majorProfile.caution}`,
           advice: `속도를 조금 낮추고 말의 온도를 부드럽게 조절해 보세요.\n${majorProfile.advice}`
         }
       : majorProfile;
@@ -942,8 +942,8 @@ function getDailyTemperatureCardProfile(card: TarotCard, temperature: number): D
 function invertTemperatureProfile(profile: DailyTemperatureCardProfile, _suit?: string): DailyTemperatureCardProfile {
   return {
     tone: profile.tone,
-    detail: `${profile.detail}\n오늘은 같은 마음도 곧장 드러나기보다 타이밍이나 표현 방식에서 살짝 어긋나 보일 수 있어요.\n그래도 흐름 전체를 보면 마음이 완전히 반대로 꺾였다기보다는, 표현의 결이 고르지 않은 쪽에 가까워요.`,
-    person: `${profile.person}\n다만 오늘은 상대가 마음을 보여 주는 방식이 조금 서툴거나 일정하지 않을 수 있어요.`,
+    detail: `${profile.detail}\n오늘은 같은 마음도 곧장 드러나기보다 조금 늦거나 조심스럽게 표현될 수 있어요.\n그래도 흐름 전체를 보면 마음이 완전히 반대로 꺾였다기보다는, 확신과 타이밍을 더 살피는 쪽에 가까워요.`,
+    person: `${profile.person}\n다만 오늘은 상대가 마음을 보여 주는 방식이 조금 서툴거나 조심스러울 수 있어요.`,
     caution: `${profile.caution}\n특히 오늘은 한 번의 반응만 보고 마음 전체를 확정하지 않는 게 좋아요.`,
     advice: `${profile.advice}\n상대 반응이 예상과 조금 달라도 바로 밀어붙이기보다, 질문자님 쪽에서 먼저 편안한 리듬을 잡아 주세요.`
   };
@@ -1138,7 +1138,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
   ];
   const cardSpecificOpening = cardSpecificOpenings[cardIndex % cardSpecificOpenings.length];
   const reversedNote = card.isReversed
-    ? '다만 역방향의 기운이 섞여 있어서 마음이 있어도 표현이 꼬이거나, 괜히 반대로 행동할 수 있어요.'
+    ? '다만 오늘은 마음이 있어도 표현이 조금 늦거나 조심스럽게 나올 수 있어요.'
     : '정방향의 흐름이라 마음과 행동이 완전히 따로 놀기보다는, 분위기만 맞으면 자연스럽게 이어질 여지가 있어요.';
   const warmCardSpecificCautions = [
     `오늘은 좋은 분위기가 있어도 너무 빨리 확답을 확인하려고 하면 온도가 살짝 굳을 수 있어요.\n따뜻한 흐름일수록 상대가 편하게 머물 수 있는 여백을 남겨 주세요.\n오늘은 마음을 시험하기보다 자연스럽게 이어 가는 쪽이 좋아요.`,
