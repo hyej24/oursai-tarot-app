@@ -966,7 +966,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
   const cardId = Math.abs(Number(selectedCard.id || 0));
   const value = Math.max(1, Number(selectedCard.value || 0));
   const suit = String(selectedCard.suit || '');
-  const reversed = Boolean(selectedCard.isReversed);
+  const reversed = false;
   const affection = selectedCard.affectionScore ?? selectedCard.affection ?? 50;
   const contact = selectedCard.contactScore ?? selectedCard.communication ?? 50;
   const progress = selectedCard.progressScore ?? selectedCard.action ?? 50;
@@ -988,7 +988,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     ? majorTemperature[cardId] ?? 36.8
     : (suitBase[suit] ?? 36.6) + (valueShift[value] ?? 0);
   const cardFineTune = (((cardId * 31) % 9) - 4) * 0.04;
-  const temperature = Number(Math.max(33.8, Math.min(40.1, baseTemperature + scoreShift + cardFineTune - (reversed ? 0.45 : 0))).toFixed(1));
+  const temperature = Number(Math.max(33.8, Math.min(40.1, baseTemperature + scoreShift + cardFineTune)).toFixed(1));
 
   const tempMood = temperature >= 38.4
     ? '따뜻함이 선명한 온도'
@@ -1347,7 +1347,10 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       menuId: props.menuId,
       question: props.question,
       situation: props.situation,
-      cards: props.cards.map(card => ({ id: card.id, isReversed: card.isReversed })),
+      cards: props.cards.map(card => ({
+        id: card.id,
+        isReversed: props.menuId === 'daily-temperature' ? false : card.isReversed,
+      })),
       partnerId: props.partnerProfile?.id || '',
     });
     const requestId = `reading-${Date.now().toString(36)}-${hashReadingKey(fetchKey)}`;
@@ -1468,7 +1471,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
               date: getKstDateKey(),
               version: DAILY_TEMPERATURE_READING_VERSION,
               cardId: props.cards[0].id,
-              isReversed: Boolean(props.cards[0].isReversed),
+              isReversed: false,
               temperature,
               readingResult: readingData
             }));
@@ -1499,7 +1502,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
             date: getKstDateKey(),
             version: DAILY_TEMPERATURE_READING_VERSION,
             cardId: props.cards[0].id,
-            isReversed: Boolean(props.cards[0].isReversed),
+            isReversed: false,
             temperature,
             readingResult: fallbackReading
           }));
@@ -1533,7 +1536,9 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   };
 
   // 1. Initial Standard Reading fetch on mount
-  const cardsSignature = props.cards.map(card => `${card.id}:${card.isReversed ? 'R' : 'U'}`).join('|');
+  const cardsSignature = props.cards
+    .map(card => `${card.id}:${props.menuId === 'daily-temperature' ? 'U' : (card.isReversed ? 'R' : 'U')}`)
+    .join('|');
   const partnerSignature = props.partnerProfile?.id || '';
 
   useEffect(() => {
@@ -1880,12 +1885,13 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
         <div className={isDailyTemperature ? "mx-auto grid max-w-[120px] grid-cols-1 gap-3" : "grid grid-cols-3 gap-3"}>
           {props.cards.map((card) => {
+            const displayCard = isDailyTemperature ? { ...card, isReversed: false } : card;
             return (
               <div 
                 key={`gallery-card-${card.id}`}
                 className="transition-none"
               >
-                <TarotCardImage card={card} />
+                <TarotCardImage card={displayCard} />
               </div>
             );
           })}

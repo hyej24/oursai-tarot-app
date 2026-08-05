@@ -109,7 +109,7 @@ export default function App() {
 
       return {
         ...savedCard,
-        isReversed: Boolean(savedTemperature.isReversed)
+        isReversed: false
       };
     } catch {
       return null;
@@ -601,16 +601,20 @@ export default function App() {
       }
     }
 
-    if (selectedMenuId === 'daily-temperature' && cards[0]) {
+    const normalizedCards = selectedMenuId === 'daily-temperature'
+      ? cards.slice(0, 1).map(card => ({ ...card, isReversed: false }))
+      : cards;
+
+    if (selectedMenuId === 'daily-temperature' && normalizedCards[0]) {
       localStorage.setItem(DAILY_TEMPERATURE_READING_KEY, JSON.stringify({
         date: getKstDateKey(),
         version: DAILY_TEMPERATURE_READING_VERSION,
-        cardId: cards[0].id,
-        isReversed: Boolean(cards[0].isReversed)
+        cardId: normalizedCards[0].id,
+        isReversed: false
       }));
     }
 
-    setSelectedCards(cards);
+    setSelectedCards(normalizedCards);
     setCurrentStep('reading-result');
   };
 
