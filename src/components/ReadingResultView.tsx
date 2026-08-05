@@ -950,289 +950,200 @@ function invertTemperatureProfile(profile: DailyTemperatureCardProfile, _suit?: 
 }
 
 function generateDailyTemperatureReading(card: TarotCard | undefined): StandardReadingResult {
-  if (!card) {
-    return {
-      oneLineConclusion: '오늘 우리 사이 온도는 36.8도예요. 서로의 반응을 조심스럽게 살피는 온도예요.',
-      questionCategory: '우리 사이 온도',
-      card1Meaning: '오늘은 서로의 눈치를 보며 온도를 맞춰 가는 흐름이에요.\n상대도 질문자님을 완전히 밖에 두고 있지는 않지만, 먼저 움직일 만큼 마음이 가볍지는 않아 보여요.\n작은 말투나 반응 하나에 분위기가 쉽게 달라질 수 있어요.\n그래서 오늘은 큰 확인보다 편한 접점 하나를 만드는 게 더 좋아요.',
-      totalFlow: '오늘 우리 사이 온도는 36.8도예요.\n확 뜨겁게 몰아치는 날은 아니지만, 관계가 끊긴 느낌도 아니에요.\n서로 조심스럽게 거리를 재면서 반응을 살피는 흐름이에요.\n편하게 말을 열면 생각보다 분위기가 부드럽게 이어질 수 있어요.',
-      caution: '상대의 반응을 너무 빨리 결론내리면 흐름이 어색해질 수 있어요.\n오늘은 답을 확인하려는 말보다 분위기를 풀어 주는 말이 더 잘 맞아요.\n질문자님 마음이 급해질수록 상대는 더 천천히 반응할 수 있어요.',
-      actionAdvice: '짧고 편한 말로 시작해 보세요.\n무거운 질문보다 일상적인 한마디가 오늘은 더 자연스럽게 닿아요.\n답장을 기다릴 때도 바로 의미를 붙이지 말고, 전체 분위기를 보면서 천천히 이어가세요.',
-      followUpQuestions: ['오늘 먼저 연락해도 괜찮을까요?', '그 사람의 진짜 마음은 무엇일까요?', '우리 관계는 앞으로 어떻게 흘러갈까요?'],
-      temperature: 36.8,
-    };
-  }
+  const selectedCard = card || ({
+    id: 41,
+    type: 'minor',
+    suit: 'cups',
+    value: 6,
+    isReversed: false,
+    affectionScore: 56,
+    contactScore: 52,
+    progressScore: 48,
+    stabilityScore: 54,
+    defenseScore: 42,
+  } as TarotCard);
 
-  const affection = card.affectionScore ?? card.affection ?? 50;
-  const contact = card.contactScore ?? card.communication ?? 50;
-  const progress = card.progressScore ?? card.action ?? 50;
-  const stability = card.stabilityScore ?? card.stability ?? 50;
-  const defense = card.defenseScore ?? card.defense ?? 50;
-  const cardIndex = Math.abs(Number(card.id || 0));
-  const reversedPenalty = card.isReversed ? 0.35 : 0;
-  const rawScore = affection * 0.34 + contact * 0.2 + progress * 0.18 + stability * 0.16 + (100 - defense) * 0.12;
-  const suitTemperatureModifierMap: Record<string, number> = {
-    cups: 0.18,
-    wands: 0.08,
-    pentacles: -0.12,
-    swords: -0.22
-  };
-  const minorValueTemperatureModifierMap: Record<number, number> = {
-    1: 0.18,
-    2: 0.32,
-    3: 0.18,
-    4: -0.18,
-    5: -0.62,
-    6: 0.12,
-    7: -0.24,
-    8: -0.18,
-    9: -0.08,
-    10: 0.24,
-    11: 0.08,
-    12: 0.02,
-    13: 0.18,
-    14: 0.22
-  };
-  const majorTemperatureModifierMap: Record<number, number> = {
-    0: 0.15,
-    1: 0.32,
-    2: -0.18,
-    3: 0.58,
-    4: 0.04,
-    5: 0.08,
-    6: 0.95,
-    7: 0.38,
-    8: 0.42,
-    9: -0.42,
-    10: 0.2,
-    11: -0.06,
-    12: -0.5,
-    13: -0.75,
-    14: 0.28,
-    15: 0.54,
-    16: -1.05,
-    17: 0.68,
-    18: -0.5,
-    19: 1.05,
-    20: 0.22,
-    21: 0.78
-  };
-  const coldCardTemperatureModifierMap: Record<number, number> = {
-    16: -1.1, // Tower
-    18: -0.6, // Moon
-    40: -0.7, // Five of Cups
-    43: -0.8, // Eight of Cups
-    52: -1.0, // Three of Swords
-    54: -0.7, // Five of Swords
-    57: -0.8, // Eight of Swords
-    58: -0.9, // Nine of Swords
-    59: -1.2, // Ten of Swords
-    68: -1.3, // Five of Pentacles
-  };
-  const warmCardTemperatureModifierMap: Record<number, number> = {
-    6: 0.8, // Lovers
-    17: 0.5, // Star
-    19: 0.9, // Sun
-    36: 0.6, // Ace of Cups
-    37: 0.8, // Two of Cups
-    41: 0.55, // Six of Cups
-    45: 0.7, // Ten of Cups
-    69: 0.4, // Six of Pentacles
-  };
-  const cardTemperatureModifier =
-    coldCardTemperatureModifierMap[Number(card.id)] ??
-    warmCardTemperatureModifierMap[Number(card.id)] ??
-    0;
-  const suitTemperatureModifier = card.type === 'minor'
-    ? suitTemperatureModifierMap[String(card.suit || '')] ?? 0
-    : 0;
-  const valueTemperatureModifier = card.type === 'minor'
-    ? minorValueTemperatureModifierMap[Number(card.value)] ?? 0
-    : majorTemperatureModifierMap[Number(card.id)] ?? 0;
-  const cardFineTune = (((cardIndex * 37) % 13) - 6) * 0.045;
-  const temperature = Number(Math.max(
-    33.6,
-    Math.min(
-      40.2,
-      34.25
-        + rawScore * 0.056
-        - reversedPenalty
-        + suitTemperatureModifier
-        + valueTemperatureModifier
-        + cardTemperatureModifier
-      + cardFineTune
-    )
-  ).toFixed(1));
+  const cardId = Math.abs(Number(selectedCard.id || 0));
+  const value = Math.max(1, Number(selectedCard.value || 0));
+  const suit = String(selectedCard.suit || '');
+  const reversed = Boolean(selectedCard.isReversed);
+  const affection = selectedCard.affectionScore ?? selectedCard.affection ?? 50;
+  const contact = selectedCard.contactScore ?? selectedCard.communication ?? 50;
+  const progress = selectedCard.progressScore ?? selectedCard.action ?? 50;
+  const stability = selectedCard.stabilityScore ?? selectedCard.stability ?? 50;
+  const defense = selectedCard.defenseScore ?? selectedCard.defense ?? 50;
 
-  const profile = getDailyTemperatureCardProfile(card, temperature);
-  return {
-    oneLineConclusion: `오늘 우리 사이 온도는 ${temperature}도예요. ${profile.tone}`,
-    questionCategory: '우리 사이 온도',
-    card1Meaning: `${profile.tone}\n${profile.detail}`,
-    totalFlow: `오늘 우리 사이 온도는 ${temperature}도예요.\n${profile.detail}\n오늘은 관계의 답을 단번에 확인하기보다, 서로가 편하게 반응할 수 있는 온도를 만드는 게 핵심이에요.`,
-    caution: profile.caution,
-    actionAdvice: profile.advice,
-    followUpQuestions: ['오늘 먼저 연락해도 괜찮을까요?', '그 사람의 진짜 마음은 무엇일까요?', '우리 관계는 앞으로 어떻게 흘러갈까요?'],
-    temperature,
+  const majorTemperature: Record<number, number> = {
+    0: 37.1, 1: 37.8, 2: 36.2, 3: 38.1, 4: 36.9, 5: 37.0, 6: 38.6, 7: 37.8, 8: 37.5, 9: 35.9,
+    10: 37.2, 11: 36.7, 12: 35.8, 13: 35.2, 14: 37.3, 15: 38.0, 16: 34.8, 17: 37.6, 18: 35.7, 19: 39.0,
+    20: 37.4, 21: 38.3,
+  };
+  const suitBase: Record<string, number> = { cups: 37.1, wands: 37.3, swords: 35.9, pentacles: 36.4 };
+  const valueShift: Record<number, number> = {
+    1: 0.4, 2: 0.7, 3: 0.3, 4: -0.3, 5: -0.9, 6: 0.2, 7: -0.3,
+    8: -0.2, 9: -0.1, 10: 0.5, 11: 0.2, 12: 0.4, 13: 0.3, 14: 0.4,
+  };
+  const scoreShift = ((affection - 50) * 0.012) + ((contact - 50) * 0.006) + ((progress - 50) * 0.006) + ((stability - 50) * 0.006) - ((defense - 50) * 0.008);
+  const baseTemperature = selectedCard.type === 'major'
+    ? majorTemperature[cardId] ?? 36.8
+    : (suitBase[suit] ?? 36.6) + (valueShift[value] ?? 0);
+  const cardFineTune = (((cardId * 31) % 9) - 4) * 0.04;
+  const temperature = Number(Math.max(33.8, Math.min(40.1, baseTemperature + scoreShift + cardFineTune - (reversed ? 0.45 : 0))).toFixed(1));
+
+  const tempMood = temperature >= 38.4
+    ? '따뜻함이 선명한 온도'
+    : temperature >= 37.2
+      ? '온기가 분명히 살아 있는 온도'
+      : temperature >= 36.1
+        ? '조심스럽게 유지되는 온도'
+        : temperature >= 35
+          ? '천천히 살펴야 하는 낮은 온도'
+          : '거리감이 먼저 느껴지는 온도';
+
+  const majorProfiles: Record<number, { mood: string; person: string; caution: string; advice: string }> = {
+    0: { mood: '가볍고 열린 분위기에서 작은 호기심이 살아나요.', person: '상대는 무겁게 확정하기보다 순간의 편안함에 반응할 수 있어요.', caution: '가벼운 신호를 너무 큰 약속처럼 해석하지 않는 게 좋아요.', advice: '부담 없는 농담이나 짧은 안부로 시작해 보세요.' },
+    1: { mood: '말과 행동이 관계 온도를 직접 움직이는 날이에요.', person: '상대는 선명한 신호가 오면 생각보다 빠르게 반응할 수 있어요.', caution: '의도를 너무 돌리면 오히려 흐름이 흐려질 수 있어요.', advice: '답하기 쉬운 말로 대화의 문을 열어 보세요.' },
+    2: { mood: '겉보다 속으로 살피는 기운이 강해요.', person: '상대는 마음을 크게 드러내기보다 질문자님의 태도를 조용히 보고 있을 수 있어요.', caution: '침묵을 바로 거절로 단정하지 않는 게 좋아요.', advice: '조급하게 캐묻기보다 편안한 여백을 남겨 주세요.' },
+    3: { mood: '다정함과 포근한 호감이 살아나기 쉬워요.', person: '상대는 질문자님에게 편안함과 부드러운 매력을 느낄 수 있어요.', caution: '너무 많이 챙기다가 질문자님이 지치지 않게 조심하세요.', advice: '작은 배려와 따뜻한 리액션을 가볍게 보여 주세요.' },
+    4: { mood: '안정감과 거리 조절이 함께 필요한 날이에요.', person: '상대는 감정보다 태도의 신뢰감과 일관성을 먼저 볼 수 있어요.', caution: '딱딱한 태도가 다정함을 가리지 않게 해야 해요.', advice: '분명하지만 부드러운 말투로 안정감을 주세요.' },
+    5: { mood: '익숙한 방식과 현실적인 기준이 온도에 영향을 줘요.', person: '상대는 관계를 가볍게 보기보다 신중하게 판단하려 할 수 있어요.', caution: '정답을 강요하면 마음이 더 닫힐 수 있어요.', advice: '서로의 입장을 존중하는 말로 대화를 풀어 보세요.' },
+    6: { mood: '서로를 의식하는 마음이 비교적 선명해요.', person: '상대는 질문자님의 반응과 분위기를 꽤 신경 쓸 수 있어요.', caution: '호감이 느껴져도 확답을 서두르면 부담이 생길 수 있어요.', advice: '다정한 리액션으로 좋은 인상을 남겨 보세요.' },
+    7: { mood: '움직임과 방향성이 살아나는 날이에요.', person: '상대는 마음이 정리되면 행동으로 반응하려는 쪽에 가까워요.', caution: '속도를 너무 밀어붙이면 관계가 거칠어질 수 있어요.', advice: '짧고 분명한 말로 자연스럽게 계기를 만들어 보세요.' },
+    8: { mood: '절제된 호감과 힘 있는 안정감이 함께 보여요.', person: '상대는 마음을 크게 드러내기보다 차분히 조절하려 할 수 있어요.', caution: '상대의 차분함을 무관심으로만 보지 마세요.', advice: '따뜻하되 흔들리지 않는 태도를 보여 주세요.' },
+    9: { mood: '마음이 안쪽에서 천천히 정리되는 날이에요.', person: '상대는 질문자님을 의식해도 혼자 생각할 시간이 필요할 수 있어요.', caution: '느린 반응을 재촉하면 더 조용해질 수 있어요.', advice: '짧은 말 하나만 남기고 기다릴 공간을 주세요.' },
+    10: { mood: '분위기가 바뀔 여지가 있는 날이에요.', person: '상대는 상황의 흐름에 따라 태도가 달라질 수 있어요.', caution: '하루의 반응만으로 전체 관계를 확정하지 마세요.', advice: '좋은 타이밍이 오면 가볍게 올라타 보세요.' },
+    11: { mood: '균형과 공정함이 관계 온도를 좌우해요.', person: '상대는 감정보다 서로의 태도와 선을 먼저 볼 수 있어요.', caution: '옳고 그름만 따지면 분위기가 차가워질 수 있어요.', advice: '감정과 상황을 같이 인정하는 말이 좋아요.' },
+    12: { mood: '바로 움직이기보다 잠시 멈춰 보는 온도예요.', person: '상대는 마음이 있어도 지금은 표현의 타이밍을 못 잡을 수 있어요.', caution: '멈춤을 실패로 보지 않는 게 좋아요.', advice: '기다림을 전략처럼 쓰고 부담 없는 말만 남겨 보세요.' },
+    13: { mood: '예전 방식보다 새로운 태도가 필요한 날이에요.', person: '상대는 이전과 같은 반응을 반복하지 않을 수 있어요.', caution: '과거 방식으로 밀어붙이면 온도가 낮아질 수 있어요.', advice: '가볍고 새롭게 시작하는 말투가 좋아요.' },
+    14: { mood: '천천히 섞이며 안정되는 온도예요.', person: '상대는 급한 감정보다 편안한 균형을 원할 수 있어요.', caution: '조급하게 끌어올리려 하면 오히려 흐름이 흐려져요.', advice: '말의 속도를 낮추고 부드럽게 맞춰 보세요.' },
+    15: { mood: '강한 끌림과 집착 사이의 온도가 올라올 수 있어요.', person: '상대는 질문자님에게 강하게 끌리면서도 쉽게 편안해지진 못할 수 있어요.', caution: '확인 욕구가 커지면 관계가 무거워질 수 있어요.', advice: '매력은 살리되 압박은 덜어내는 태도가 좋아요.' },
+    16: { mood: '예민한 말 하나가 온도를 크게 흔들 수 있어요.', person: '상대는 당황하거나 방어적으로 반응할 가능성이 있어요.', caution: '쌓인 말을 한꺼번에 터뜨리지 않는 게 좋아요.', advice: '중요한 말은 짧고 차분하게 정리해서 전하세요.' },
+    17: { mood: '잔잔한 기대와 회복의 온기가 남아 있어요.', person: '상대는 관계를 차갑게 끊기보다 부드럽게 남겨 두고 있을 수 있어요.', caution: '희망이 보여도 현실보다 앞서가진 않는 게 좋아요.', advice: '따뜻한 말 한마디를 조용히 남겨 보세요.' },
+    18: { mood: '불안과 상상이 실제 온도보다 크게 느껴질 수 있어요.', person: '상대는 마음을 선명하게 보여 주기보다 흐릿하게 반응할 수 있어요.', caution: '추측을 사실처럼 믿지 않는 게 가장 중요해요.', advice: '깊은 확인보다 편안한 분위기를 먼저 만들어 보세요.' },
+    19: { mood: '밝고 따뜻한 반응이 살아나기 좋은 날이에요.', person: '상대는 질문자님에게 좋은 인상이나 편안함을 느낄 수 있어요.', caution: '좋은 반응을 바로 압박으로 바꾸지 마세요.', advice: '웃을 수 있는 말과 긍정적인 리액션이 좋아요.' },
+    20: { mood: '미뤄 둔 감정이 다시 떠오를 수 있는 날이에요.', person: '상대는 질문자님과의 관계를 다시 생각해 볼 수 있어요.', caution: '과거 이야기를 너무 무겁게 꺼내면 부담이 될 수 있어요.', advice: '정리된 마음으로 담백하게 말을 열어 보세요.' },
+    21: { mood: '관계의 그림을 조금 더 넓게 볼 수 있는 날이에요.', person: '상대는 질문자님과의 흐름을 완전히 닫기보다 전체적으로 살피는 모습이에요.', caution: '완성된 느낌에 취해 세부 신호를 놓치지 마세요.', advice: '좋은 흐름은 차분히 이어 가는 태도가 잘 맞아요.' },
   };
 
-  const temperatureFeel = temperature >= 39
-    ? '꽤 뜨겁고 선명한 온도'
-    : temperature >= 37.6
-      ? '따뜻하게 살아 있는 온도'
-      : temperature >= 36.4
-        ? '조심스럽지만 꺼지지 않은 온도'
-        : temperature >= 35.2
-          ? '느리고 낮게 머무는 온도'
-          : '서늘하고 조심스러운 온도';
-  const cardTemperatureFlavorMap: Record<number, string> = {
-    6: '서로를 의식하는 마음이 비교적 선명하게 살아 있는 흐름이에요.',
-    9: '마음이 없는 것보다 혼자 정리할 시간이 더 필요한 흐름이에요.',
-    12: '움직이고 싶어도 쉽게 움직이지 못하는 정체감이 보여요.',
-    13: '예전 방식이 끝나고 다른 태도로 넘어가야 하는 전환점이 보여요.',
-    16: '감정이 흔들린 뒤라 관계 온도가 갑자기 낮아지거나 불안정해질 수 있어요.',
-    17: '당장 뜨겁진 않아도 다시 기대를 걸 수 있는 잔잔한 온기가 남아 있어요.',
-    18: '마음보다 불안과 눈치가 앞서서 실제보다 더 차갑게 느껴질 수 있어요.',
-    19: '감정이 비교적 밝고 숨김없이 드러나기 쉬운 따뜻한 흐름이에요.',
-    37: '서로 마주 보는 감정선이 살아 있어서 관계 온도가 부드럽게 올라가기 쉬워요.',
-    41: '다정했던 기억이나 익숙한 호감이 올라와서 오늘의 온도를 따뜻하게 붙잡아 주는 흐름이에요.',
-    40: '아쉬움이나 후회가 남아 있어서 온기가 있어도 마음이 쉽게 가라앉을 수 있어요.',
-    43: '마음을 접으려는 흐름이 섞여 있어서 다가가도 반응이 느리게 돌아올 수 있어요.',
-    52: '상처나 섭섭함이 먼저 올라와서 오늘의 온도를 예민하게 만들 수 있어요.',
-    57: '마음이 갇힌 듯해서 표현보다 고민이 많아지는 흐름이에요.',
-    58: '걱정이 커져 실제 분위기보다 더 불안하게 느껴질 수 있어요.',
-    59: '지친 마음이 강해서 지금은 온기를 바로 끌어올리기 어려워요.',
-    68: '소외감이나 부족함이 먼저 느껴져서 오늘의 온도는 높게 잡기 어려워요.',
-    69: '주고받는 균형이 맞으면 온도가 안정적으로 올라갈 수 있어요.',
+  const suitProfiles: Record<string, { mood: string; person: string; caution: string; advice: string }> = {
+    wands: {
+      mood: '행동과 타이밍이 오늘의 온도를 크게 움직여요.',
+      person: '상대는 생각이 정리되면 말보다 행동으로 먼저 반응할 수 있어요.',
+      caution: '속도가 빨라질수록 말실수나 충동적인 반응을 조심해야 해요.',
+      advice: '가볍게 먼저 움직이되, 상대가 따라올 여지를 남겨 주세요.',
+    },
+    cups: {
+      mood: '감정의 결이 부드럽게 살아나는 날이에요.',
+      person: '상대는 분위기와 말투에 따라 마음이 쉽게 열리거나 조심스러워질 수 있어요.',
+      caution: '작은 반응을 너무 크게 해석하면 질문자님 마음이 먼저 흔들릴 수 있어요.',
+      advice: '다정한 리액션과 편안한 공감으로 온도를 살려 보세요.',
+    },
+    swords: {
+      mood: '생각과 말의 온도가 관계 분위기를 좌우해요.',
+      person: '상대는 마음보다 판단과 상황 정리를 먼저 앞세울 수 있어요.',
+      caution: '날카로운 확인이나 시험하는 말은 분위기를 차갑게 만들 수 있어요.',
+      advice: '짧고 담백하게 말하고, 감정보다 톤을 부드럽게 잡아 주세요.',
+    },
+    pentacles: {
+      mood: '현실적인 여유와 안정감이 온도에 크게 작용해요.',
+      person: '상대는 큰 표현보다 꾸준함이나 실제 행동에서 마음을 보여 줄 수 있어요.',
+      caution: '느린 속도를 마음 없음으로 단정하지 않는 게 좋아요.',
+      advice: '작은 약속을 지키고 안정적인 태도를 보여 주세요.',
+    },
   };
-  const genericCardTemperatureFlavor = card.type === 'major'
-    ? `오늘은 두 사람 사이의 큰 분위기가 먼저 움직여서, 작은 말보다 관계 전체의 흐름이 더 크게 느껴질 수 있어요.`
-    : card.suit === 'cups'
-      ? `감정의 물결이 예민하게 움직이는 날이에요. 좋아하는 마음이 있어도 기분과 분위기에 따라 온도가 달라질 수 있어요.`
-      : card.suit === 'wands'
-        ? `행동과 타이밍이 중요한 날이에요. 누가 먼저 움직이느냐에 따라 오늘 온도가 빠르게 달라질 수 있어요.`
-        : card.suit === 'swords'
-          ? `생각과 말의 온도가 크게 느껴지는 날이에요. 마음보다 판단이 앞서면 실제보다 차갑게 느껴질 수 있어요.`
-          : `현실감과 안정감이 중요하게 작용하는 날이에요. 감정보다 상황, 여유, 거리감이 오늘 온도에 크게 작용해요.`;
-  const cardTemperatureFlavor = cardTemperatureFlavorMap[Number(card.id)] || genericCardTemperatureFlavor;
-  const heavyTemperatureCardIds = new Set([9, 12, 13, 16, 18, 40, 43, 52, 54, 57, 58, 59, 67, 68]);
-  const isHeavyTemperatureCard = heavyTemperatureCardIds.has(Number(card.id)) || temperature < 36.2;
-  const suitTone = card.type === 'major'
-    ? '오늘은 작은 반응보다 관계 전체의 분위기가 더 크게 움직이는 날이에요.'
-    : card.suit === 'cups'
-      ? '감정선이 예민하게 살아 있어서 말투 하나에도 마음이 쉽게 흔들릴 수 있어요.'
-      : card.suit === 'wands'
-        ? '가만히 있기보다 어느 쪽이든 움직임이 생기기 쉬운 날이에요.'
-        : card.suit === 'swords'
-          ? '마음보다 생각이 앞서면서 서로의 말을 더 신중하게 재는 분위기예요.'
-          : '현실적인 상황이나 각자의 일정이 관계 온도에 꽤 영향을 주는 날이에요.';
-  const cardSpecificOpenings = [
-    `오늘은 관계의 온도를 좌우하는 감정선이 평소보다 더 섬세하게 느껴져요.`,
-    `오늘은 상대의 반응이 겉으로 보이는 것보다 한 번 더 걸러져 나올 수 있어요.`,
-    `오늘은 평소보다 반응의 결이 조금 다르게 느껴질 수 있어요.`,
-    `오늘은 마음이 바로 드러나기보다 한 번 더 생각을 거쳐 표현되는 흐름이에요.`,
-    `오늘 두 사람 사이에는 작은 계기 하나가 생각보다 중요하게 작용해요.`,
-    `지금 흐름은 단순히 좋다 싫다로 보기엔 결이 조금 섬세해요.`,
-    `오늘은 상대의 속도와 질문자님의 기대 속도가 조금 다를 수 있어요.`,
-    `오늘은 반응이 바로 오지 않아도 그 자체로 의미가 없다고 보긴 어려워요.`
-  ];
-  const cardSpecificOpening = cardSpecificOpenings[cardIndex % cardSpecificOpenings.length];
-  const reversedNote = card.isReversed
-    ? '다만 오늘은 마음이 있어도 표현이 조금 늦거나 조심스럽게 나올 수 있어요.'
-    : '정방향의 흐름이라 마음과 행동이 완전히 따로 놀기보다는, 분위기만 맞으면 자연스럽게 이어질 여지가 있어요.';
-  const warmCardSpecificCautions = [
-    `오늘은 좋은 분위기가 있어도 너무 빨리 확답을 확인하려고 하면 온도가 살짝 굳을 수 있어요.\n따뜻한 흐름일수록 상대가 편하게 머물 수 있는 여백을 남겨 주세요.\n오늘은 마음을 시험하기보다 자연스럽게 이어 가는 쪽이 좋아요.`,
-    `상대가 다정하게 반응해도 바로 큰 의미로 몰아가면 부담이 될 수 있어요.\n좋은 신호는 천천히 쌓아 두고, 오늘은 편안한 대화의 결을 지키는 게 좋아요.\n따뜻한 분위기를 오래 유지하는 게 더 중요해요.`,
-    `오늘은 추억이나 익숙함이 좋게 작용할 수 있지만, 과거 이야기를 너무 무겁게 꺼내면 분위기가 흐려질 수 있어요.\n가볍게 웃을 수 있는 쪽으로만 건드려 주세요.\n편한 감정이 먼저 살아나야 다음 흐름도 부드러워져요.`,
-    `마음이 좋게 움직이는 날이라도 질문자님이 너무 앞서가면 상대가 속도를 맞추기 어려울 수 있어요.\n오늘은 한 번에 확인하기보다 반응을 보며 조금씩 가까워지는 게 좋아요.\n다정함을 재촉하지 않는 게 포인트예요.`,
-    `오늘은 기대가 커지기 쉬운 온도예요.\n그래서 작은 반응에도 마음이 크게 움직일 수 있으니, 좋은 흐름을 너무 빨리 결론으로 만들지는 마세요.\n편안함을 유지하면 온기가 더 오래 가요.`
-  ];
-  const cardSpecificCautions = [
-    `먼저 결론을 정해 놓고 상대의 반응을 끼워 맞추면 마음이 더 복잡해질 수 있어요.\n오늘은 보이는 행동과 실제 마음 사이에 약간의 틈이 있을 수 있어요.\n한 번의 답장, 한 번의 표정만으로 전체 분위기를 확정하지 않는 게 좋아요.`,
-    `오늘은 말투 하나가 크게 들릴 수 있는 날이에요.\n상대가 무심하게 보여도 정말 무심한 건지, 그냥 여유가 없는 건지는 조금 더 봐야 해요.\n질문자님 마음이 먼저 지치지 않게 해석의 속도를 늦춰 주세요.`,
-    `오늘은 확인하려는 말이 상대에게 부담으로 닿을 수 있어요.\n속마음을 알고 싶어도 바로 캐묻기보다는 분위기를 먼저 보는 게 좋아요.\n답을 급하게 끌어내려 하면 오히려 상대가 말을 아낄 수 있어요.`,
-    `오늘은 감정이 올라왔을 때 바로 표현하면 말이 조금 세게 나갈 수 있어요.\n특히 서운했던 부분을 꺼낼 때는 이유를 따지기보다 질문자님이 느낀 감정을 부드럽게 말하는 쪽이 나아요.\n대화의 시작을 날카롭게 만들지 않는 게 중요해요.`,
-    `오늘은 관계의 균형을 같이 봐야 해요.\n질문자님만 애쓰는 느낌이 들면 마음이 금방 무거워질 수 있어요.\n오늘은 상대 반응을 확인하기 전에 질문자님이 편한 선을 먼저 정해 두는 게 좋아요.`,
-    `오늘은 상대를 시험하듯 던지는 말이 흐름을 어색하게 만들 수 있어요.\n괜히 떠보거나 일부러 차갑게 굴면 상대도 방어적으로 받아들일 수 있어요.\n진짜 궁금한 마음은 돌려 말하기보다 담백하게 남기는 편이 나아요.`,
-    `마음이 급하면 표현이 짧아지고 단단해질 수 있어요.\n그렇게 되면 질문자님 의도와 다르게 상대에게는 압박처럼 보일 수 있어요.\n오늘은 말의 내용보다 말의 톤을 먼저 살피는 게 좋아요.`,
-    `오늘은 기대가 커질수록 작은 반응에도 마음이 흔들릴 수 있어요.\n좋은 신호를 찾고 싶은 마음은 자연스럽지만, 억지로 의미를 붙이면 오히려 더 불안해져요.\n흐름은 하루보다 며칠의 패턴으로 보는 게 더 정확해요.`,
-    `오늘은 숨은 맥락을 놓치기 쉬워요.\n상대가 조용해 보인다고 해서 곧바로 멀어진 흐름으로 보긴 어려워요.\n겉으로 보이는 속도보다 관계 안쪽의 온도를 천천히 확인해 주세요.`,
-    `오늘은 질문자님 마음이 앞서면 대화가 원하는 방향과 다르게 흘러갈 수 있어요.\n상대에게 답을 받아내려는 느낌이 생기면 둘 사이 공기가 무거워져요.\n궁금함은 남기되, 여유 있는 태도를 같이 보여 주는 게 좋아요.`
-  ];
-  const warmCardSpecificAdvices = [
-    `오늘은 가볍고 편한 말부터 시작해 보세요.\n긴 설명보다 짧은 안부 하나가 더 자연스럽게 닿아요.\n상대가 답하기 쉬운 공기를 만들어 주면 다음 대화가 훨씬 부드러워져요.`,
-    `오늘은 질문보다 리액션을 먼저 주는 게 좋아요.\n상대가 한 말을 받아 주고, 거기에 짧게 마음을 얹어 보세요.\n대화가 숙제처럼 느껴지지 않으면 온도도 자연스럽게 살아나요.`,
-    `부담 없는 접점을 하나 만들어 보세요.\n갑자기 깊은 얘기로 들어가기보다 일상적인 말, 가벼운 농담, 짧은 공감이 잘 맞아요.\n오늘은 편안함이 호감보다 먼저 문을 열어 줘요.`,
-    `질문자님이 먼저 여유 있는 태도를 보여 주면 분위기가 훨씬 부드러워져요.\n상대의 속도를 재촉하지 말고, 답할 공간을 남겨 주세요.\n그 여백이 오히려 좋은 반응을 끌어낼 수 있어요.`,
-    `오늘은 한 문장만 담백하게 남기는 쪽이 더 잘 닿아요.\n마음을 길게 설명하기보다 “생각나서 연락했어”처럼 가볍게 시작해 보세요.\n말이 짧아도 온도는 충분히 전달될 수 있어요.`,
-    `대화가 이어질 여지를 남기는 게 좋아요.\n결론을 한 번에 확인하려 하기보다 다음 말을 할 수 있는 작은 문을 열어 두세요.\n상대가 편해지면 반응도 조금씩 따라올 수 있어요.`,
-    `답을 기다리는 동안 바로 의미를 붙이지 않는 게 좋아요.\n상대의 답장 속도보다 대화가 이어지는 질감을 봐 주세요.\n오늘은 느리더라도 부드럽게 이어지는 흐름이 더 중요해요.`,
-    `오늘은 질문자님이 먼저 분위기를 편하게 열어 주면 좋아요.\n무거운 얘기는 조금 미루고, 서로 웃을 수 있는 말부터 꺼내 보세요.\n작은 편안함이 관계 온도를 안정적으로 올려 줄 수 있어요.`,
-    `상대가 반응하기 쉬운 주제를 고르는 게 좋아요.\n둘 다 부담 없는 얘기부터 시작하면 어색함이 줄어들어요.\n편한 대화가 쌓이면 마음도 조금 더 자연스럽게 드러나요.`,
-    `오늘은 먼저 다가가더라도 속도를 낮춰 주세요.\n한 번에 답을 확인하려 하기보다, 상대가 편하게 따라올 수 있는 만큼만 열어 두세요.\n조금 느린 템포가 오히려 관계를 더 안정적으로 만들어 줘요.`
-  ];
-  const heavyCardSpecificAdvices = [
-    `오늘 올라오는 무거운 기운은 키우기보다 덜어내는 게 좋아요.\n오늘은 답을 캐내기보다 질문자님 마음을 먼저 진정시키는 쪽이 맞아요.\n짧고 편한 말 하나만 남기고, 나머지는 상대가 따라올 시간을 주세요.`,
-    `오늘은 고민을 더 깊게 파고들수록 마음이 복잡해질 수 있어요.\n상대의 반응을 계속 되짚기보다, 지금 할 수 있는 작은 행동 하나만 정해 보세요.\n가벼운 안부 정도면 충분하고, 긴 확인은 미루는 게 좋아요.`,
-    `오늘처럼 마음이 복잡한 날에는 대화를 무겁게 시작하지 않는 게 중요해요.\n상대에게 바로 답을 요구하기보다, 부담 없는 말로 공기를 가볍게 만들어 주세요.\n분위기가 풀린 뒤에야 진짜 얘기도 조금 더 편하게 나올 수 있어요.`,
-    `오늘은 마음이 불안할수록 한 박자 늦게 움직이는 게 좋아요.\n보내고 싶은 말이 길어진다면 잠깐 저장해 두고, 핵심만 짧게 줄여 보세요.\n감정을 다 설명하지 않아도 질문자님의 온도는 충분히 전해질 수 있어요.`,
-    `오늘의 무게를 줄이려면 질문자님이 먼저 편안한 태도를 잡아야 해요.\n상대가 느리거나 애매해 보여도 바로 몰아붙이지 말고, 대화가 숨 쉴 틈을 남겨 주세요.\n오늘은 선명한 답보다 안정된 분위기가 먼저예요.`,
-    `오늘은 상대를 시험하거나 떠보는 말은 피하는 편이 좋아요.\n불안해서 확인하고 싶은 마음은 이해되지만, 돌려 말하면 오히려 관계가 더 꼬일 수 있어요.\n필요한 말만 담백하게 남기는 게 가장 안전해요.`,
-    `생각이 많아지는 날이라 말이 딱딱하게 나갈 수 있어요.\n오늘은 문장을 보내기 전에 한 번만 더 부드럽게 바꿔 보세요.\n질문보다 공감, 확인보다 안부가 관계 온도를 지키는 데 더 좋아요.`,
-    `오늘은 관계를 바로 결론내리기보다 질문자님 컨디션을 먼저 챙기는 게 좋아요.\n상대 반응을 기다리는 동안 다른 일로 마음을 조금 돌려 주세요.\n여유가 생기면 같은 상황도 덜 차갑게 보일 수 있어요.`,
-    `오늘은 무리해서 끌어올리기보다 천천히 낮은 온도를 안정시키는 쪽이에요.\n짧게 말하고, 반응을 보고, 다음 말을 정하는 순서가 좋아요.\n오늘은 많이 하는 것보다 덜 부담스럽게 하는 게 더 효과적이에요.`,
-    `오늘은 질문자님이 먼저 속도를 낮추면 관계가 덜 삐걱거려요.\n큰 고백이나 긴 설명보다, 상대가 편하게 받을 수 있는 한마디가 좋아요.\n조금 심심해 보일 정도의 담백함이 오히려 오늘은 안전해요.`
-  ];
-  const cardSpecificAdvices = isHeavyTemperatureCard ? heavyCardSpecificAdvices : warmCardSpecificAdvices;
-  const cardSpecificCautionPool = temperature >= 37 || (card.suit === 'cups' && affection >= 60)
-    ? warmCardSpecificCautions
-    : cardSpecificCautions;
-  let cardSpecificCaution = cardSpecificCautionPool[(cardIndex + (card.isReversed ? 3 : 0)) % cardSpecificCautionPool.length];
-  let cardSpecificAdvice = cardSpecificAdvices[(cardIndex + (card.isReversed ? 5 : 0)) % cardSpecificAdvices.length];
 
-  if (Number(card.id) === 41 && !card.isReversed) {
-    cardSpecificCaution = `오늘은 따뜻한 기억이나 익숙한 마음이 살아나는 날이에요.\n다만 그 온기를 바로 확답으로 몰아가면 상대가 살짝 부담스러워질 수 있어요.\n좋은 분위기는 재촉하지 않을 때 더 오래 이어져요.`;
-    cardSpecificAdvice = `오늘은 예전의 편안했던 분위기를 가볍게 꺼내 보세요.\n무거운 질문보다 웃을 수 있는 말, 익숙한 이야기, 다정한 리액션이 잘 맞아요.\n상대가 편안함을 느끼면 마음도 자연스럽게 더 가까워질 수 있어요.`;
-  }
+  const valueProfiles: Record<number, { mood: string; person: string; caution: string; advice: string }> = {
+    1: { mood: '새로운 신호가 시작될 수 있어요.', person: '상대는 작은 계기에 반응할 준비가 되어 있을 수 있어요.', caution: '시작의 신호를 너무 큰 결론으로 키우지 마세요.', advice: '짧고 밝은 첫마디가 좋아요.' },
+    2: { mood: '서로의 반응을 맞춰 보는 온도예요.', person: '상대는 질문자님의 태도를 보며 거리를 조절할 수 있어요.', caution: '상대가 고민하는 시간을 압박하지 마세요.', advice: '선택을 강요하기보다 가능성을 열어 주세요.' },
+    3: { mood: '관계가 조금씩 밖으로 펼쳐지는 흐름이에요.', person: '상대는 이어질 가능성을 완전히 닫지 않고 볼 수 있어요.', caution: '기대가 커져도 조급하게 확인하지 마세요.', advice: '다음 대화로 이어질 여지를 남겨 보세요.' },
+    4: { mood: '편안함과 정체감이 함께 느껴질 수 있어요.', person: '상대는 안전한 거리 안에서 반응하려 할 수 있어요.', caution: '편안함을 무관심으로만 보지 마세요.', advice: '부담 없는 안정감을 먼저 만들어 주세요.' },
+    5: { mood: '서운함이나 부족함이 먼저 올라올 수 있어요.', person: '상대는 마음이 있어도 여유가 없어 낮게 반응할 수 있어요.', caution: '부족한 반응을 질문자님 가치와 연결하지 마세요.', advice: '무리해서 끌어올리기보다 마음을 먼저 보호하세요.' },
+    6: { mood: '익숙함과 다정한 기억이 온도를 살려요.', person: '상대는 질문자님에게 편안함이나 아련한 호감을 느낄 수 있어요.', caution: '좋았던 분위기를 바로 확답으로 몰아가지 마세요.', advice: '편안했던 이야기나 가벼운 안부가 잘 맞아요.' },
+    7: { mood: '겉으로 보이는 것보다 살피는 마음이 많아요.', person: '상대는 쉽게 속을 보이기보다 질문자님의 반응을 지켜볼 수 있어요.', caution: '애매한 신호를 확정적인 답으로 보지 마세요.', advice: '관찰하되 단정하지 않는 태도가 좋아요.' },
+    8: { mood: '속도와 거리 조절이 중요한 날이에요.', person: '상대는 움직이고 싶어도 부담을 계산할 수 있어요.', caution: '따라붙듯 확인하면 상대가 더 느려질 수 있어요.', advice: '짧게 말하고 반응을 본 뒤 다음을 정하세요.' },
+    9: { mood: '기대와 불안이 함께 커질 수 있어요.', person: '상대는 마음이 있어도 혼자 생각이 많아질 수 있어요.', caution: '걱정을 사실처럼 믿지 않는 게 좋아요.', advice: '긴 확인보다 질문자님 마음을 먼저 진정시켜 주세요.' },
+    10: { mood: '하나의 흐름이 정리되고 다음 단계가 보여요.', person: '상대는 관계를 더 크게 보거나 현실적인 결론을 생각할 수 있어요.', caution: '한 번에 모든 답을 받으려 하지 마세요.', advice: '오늘은 차분히 정리하고 다음 연결점을 만들어 보세요.' },
+    11: { mood: '가볍고 서툰 신호가 먼저 보일 수 있어요.', person: '상대는 진심을 완성된 말보다 작은 관심으로 보일 수 있어요.', caution: '서툰 표현을 너무 가볍게 넘기지 마세요.', advice: '작은 신호를 부드럽게 받아 주세요.' },
+    12: { mood: '빠른 움직임과 들뜬 온도가 살아나요.', person: '상대는 마음이 움직이면 직진하거나 티가 날 수 있어요.', caution: '뜨거운 반응이 오래 갈지는 조금 더 봐야 해요.', advice: '가볍게 호응하되 속도는 함께 조절하세요.' },
+    13: { mood: '성숙하고 깊은 반응이 가능해요.', person: '상대는 감정을 가볍게 던지기보다 자신만의 방식으로 보여 줄 수 있어요.', caution: '상대의 스타일을 질문자님 방식으로만 재단하지 마세요.', advice: '상대의 리듬을 존중하면서 따뜻하게 받아 주세요.' },
+    14: { mood: '안정감과 책임감이 온도를 지켜요.', person: '상대는 크게 표현하지 않아도 꾸준한 태도로 마음을 보일 수 있어요.', caution: '느린 표현을 답답하게만 보지 마세요.', advice: '차분하고 믿을 수 있는 태도가 좋아요.' },
+  };
 
-  let mood = '';
-  let detail = '';
-  let caution = '';
-  let advice = '';
+  const base = selectedCard.type === 'major'
+    ? (majorProfiles[cardId] || majorProfiles[10])
+    : {
+        mood: `${suitProfiles[suit]?.mood || '오늘은 서로의 속도를 조심스럽게 맞춰 가는 날이에요'} ${valueProfiles[value]?.mood || ''}`.trim(),
+        person: `${suitProfiles[suit]?.person || '상대는 질문자님의 반응을 보며 거리를 조절할 수 있어요'} ${valueProfiles[value]?.person || ''}`.trim(),
+        caution: `${suitProfiles[suit]?.caution || '작은 반응 하나로 전체 마음을 단정하지 마세요'} ${valueProfiles[value]?.caution || ''}`.trim(),
+        advice: `${suitProfiles[suit]?.advice || '편안한 말투로 천천히 다가가 보세요'} ${valueProfiles[value]?.advice || ''}`.trim(),
+      };
 
-  if (temperature >= 38.5) {
-    mood = `오늘 우리 사이 온도는 ${temperature}도예요. 감정이 꽤 뜨겁게 올라와 있고, 서로에게 끌리는 기운도 분명해요.`;
-    detail = '오늘은 서로를 의식하는 기운이 꽤 선명해요.\n상대도 질문자님 쪽으로 마음이 기울어 있는 장면이 보여요.\n다만 감정이 바로 말로 튀어나오기보다 분위기를 보며 반응하려는 흐름이에요.\n자연스럽게 말을 건네면 생각보다 빠르게 온도가 올라갈 수 있어요.';
-    caution = '너무 확인하려는 말만 던지면 좋은 온도도 부담으로 바뀔 수 있어요.\n오늘은 재촉보다 여유가 훨씬 예쁘게 먹혀요.\n상대가 반응할 틈을 남겨 두면 흐름이 더 부드럽게 이어져요.';
-    advice = '먼저 다정하게 한마디 건네도 괜찮아요.\n답을 끌어내려 하기보다, 상대가 편하게 웃고 반응할 수 있는 말을 골라 보세요.\n오늘은 질문자님이 분위기를 부드럽게 열어 주는 쪽이 좋아요.';
-  } else if (temperature >= 37) {
-    mood = `오늘 우리 사이 온도는 ${temperature}도예요. 온기가 분명히 살아 있고, 서로를 의식하는 흐름이에요.`;
-    detail = '상대가 마음을 바로 티 내지는 않아도 관심의 끈은 이어져 있어요.\n말투나 반응이 느려 보여도 질문자님을 완전히 밀어낸 흐름은 아니에요.\n지금은 상황을 보면서 조심스럽게 움직이려는 느낌이 강해요.\n가볍게 닿는 말에는 생각보다 부드럽게 반응할 수 있어요.';
-    caution = '좋은 흐름이 있어도 너무 빨리 확인하려고 하면 분위기가 살짝 굳을 수 있어요.\n오늘은 마음을 묻기 전에 서로 편해지는 시간이 먼저예요.';
-    advice = '짧은 안부나 가벼운 리액션부터 시작해 보세요.\n오늘은 깊게 파고들기보다 자연스럽게 이어지는 대화를 만드는 게 좋아요.';
-  } else if (temperature >= 36) {
-    mood = `오늘 우리 사이 온도는 ${temperature}도예요. 조심스럽고 천천히 풀리는 온도예요.`;
-    detail = '작은 관심은 남아 있지만, 지금은 상대가 자기 생각이나 현실 문제에 더 묶여 있어 보여요.\n그래서 반응이 들쑥날쑥하거나 마음과 다르게 무심해 보일 수 있어요.\n질문자님을 싫어해서라기보다, 지금 자기 페이스를 먼저 지키려는 모습이 강해요.\n오늘은 천천히 풀어야 온도가 다시 올라가는 흐름이에요.';
-    caution = '오늘은 큰 의미를 확인하려고 하면 답이 더 흐려질 수 있어요.\n상대 반응 하나하나에 감정을 크게 실으면 질문자님이 먼저 지칠 수 있어요.\n상대가 느리게 움직이는 날에는 질문자님도 속도를 조금 낮추는 게 좋아요.';
-    advice = '오늘은 깊은 얘기보다 편한 분위기를 만드는 게 먼저예요.\n짧게 다가가고, 반응을 본 뒤 다음 말을 이어가세요.\n상대가 편안함을 느끼면 대화의 온도도 조금씩 살아날 수 있어요.';
-  } else {
-    mood = `오늘 우리 사이 온도는 ${temperature}도예요. 지금은 간격을 두고 살피는 흐름이라, 바로 밀어붙이면 상대가 더 물러날 수 있어요.`;
-    detail = '상대도 신경은 쓰지만, 지금은 여유가 부족하거나 방어적으로 굳어 있는 흐름이에요.\n다가오는 말도 쉽게 부담으로 받아들일 수 있어요.\n질문자님이 먼저 세게 밀면 상대는 더 뒤로 물러날 가능성이 있어요.\n오늘은 관계를 확인하기보다 서로의 간격을 편하게 두는 쪽이 안전해요.';
-    caution = '확인받고 싶은 마음으로 연락하면 실망이 커질 수 있어요.\n오늘은 상대 반응보다 질문자님 마음을 안정시키는 게 먼저예요.\n괜히 의미를 크게 붙이면 작은 반응도 크게 흔들릴 수 있어요.';
-    advice = '오늘은 먼저 크게 움직이지 말고 한 박자 쉬어 가세요.\n마음이 급할수록 짧고 담백한 말만 남기는 게 좋아요.\n내일이나 분위기가 풀렸을 때 가볍게 다시 건네면 훨씬 자연스러워요.';
-  }
+  const reversedSoftener = reversed
+    ? {
+        mood: '다만 오늘은 그 흐름이 바로 크게 드러나기보다 한 박자 늦게 표현될 수 있어요.',
+        person: '상대도 마음을 숨긴다기보다 확신과 타이밍을 조금 더 살피는 모습이에요.',
+        caution: '오늘은 답을 빨리 끌어내려 하기보다 반응이 자연스럽게 나올 시간을 주는 게 좋아요.',
+        advice: '예상보다 반응이 작아도 바로 밀어붙이지 말고, 편안한 리듬을 먼저 만들어 주세요.',
+      }
+    : {
+        mood: '오늘은 분위기만 잘 맞으면 마음이 비교적 자연스럽게 이어질 수 있어요.',
+        person: '상대도 편안한 공기가 만들어지면 질문자님 쪽으로 반응을 보여 줄 여지가 있어요.',
+        caution: '좋은 신호가 보여도 하루 안에 전부 확인하려 들지는 않는 게 좋아요.',
+        advice: '가볍고 다정한 말로 대화가 이어질 공간을 열어 주세요.',
+      };
 
-  detail = `${cardSpecificOpening}\n오늘의 체감은 ${temperatureFeel}에 가까워요.\n${cardTemperatureFlavor}\n${suitTone}\n${reversedNote}\n${detail}`;
-  caution = `${cardSpecificCaution}\n${caution}`;
-  advice = `${cardSpecificAdvice}\n${advice}`;
+  const fiveLines = (lines: string[]) => lines.map(line => line.trim()).filter(Boolean).slice(0, 5).join('\n');
+  const clean = (text: string) => text
+    .replace(/원래는/g, '')
+    .replace(/꼬여 보이는/g, '천천히 정리되는')
+    .replace(/꼬여/g, '조심스러워')
+    .replace(/비틀려/g, '조심스럽게')
+    .replace(/어긋나/g, '늦어지')
+    .replace(/반대로 행동/g, '다르게 표현')
+    .replace(/그 흐름을 살리면/g, '오늘은')
+    .replace(/검\s*\d+번|컵\s*\d+번|지팡이\s*\d+번|펜타클\s*\d+번/g, '')
+    .replace(/THE\s+[A-Z\s]+/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const oneLineConclusion = clean(`오늘 우리 사이 온도는 ${temperature}도예요. ${tempMood}예요.`);
+  const card1Meaning = clean(fiveLines([
+    `오늘 우리 사이 온도는 ${temperature}도예요.`,
+    base.mood,
+    reversedSoftener.mood,
+    temperature >= 37.2 ? '따뜻함은 살아 있지만, 그 온도를 오래 유지하려면 부담 없이 다루는 게 중요해요.' : '온도가 낮게 느껴져도 관계가 바로 끊긴 뜻은 아니고, 지금은 속도를 낮춰 살피는 쪽에 가까워요.',
+    '오늘은 작은 말투와 반응의 편안함이 관계 분위기를 크게 바꿀 수 있어요.',
+  ]));
+  const card2Meaning = clean(fiveLines([
+    base.person,
+    reversedSoftener.person,
+    contact >= 58 ? '연락이나 대화의 접점은 비교적 열려 있는 편이에요.' : '연락이나 대화는 빠르게 터지기보다 조심스럽게 이어질 가능성이 커요.',
+    defense >= 58 ? '상대는 부담을 느끼면 한 걸음 물러설 수 있으니 편안함이 먼저예요.' : '상대가 편안함을 느끼면 생각보다 부드럽게 반응할 수 있어요.',
+    '겉으로 보이는 반응보다 오늘은 전체적인 태도와 분위기를 같이 보는 게 좋아요.',
+  ]));
+  const caution = clean(fiveLines([
+    base.caution,
+    reversedSoftener.caution,
+    temperature >= 37.2 ? '좋은 온도가 느껴져도 바로 확답을 요구하면 분위기가 무거워질 수 있어요.' : '반응이 작다고 해서 마음 전체를 낮게 단정하면 질문자님 마음이 먼저 지칠 수 있어요.',
+    '오늘은 확인하려는 말보다 상대가 편하게 답할 수 있는 공기가 더 중요해요.',
+    '한 번의 답장, 한 번의 표정만으로 결론내리지 않는 게 좋아요.',
+  ]));
+  const actionAdvice = clean(fiveLines([
+    base.advice,
+    reversedSoftener.advice,
+    progress >= 58 ? '먼저 움직여도 괜찮지만, 말은 짧고 산뜻하게 시작하는 게 좋아요.' : '오늘은 크게 움직이기보다 짧은 안부나 가벼운 리액션 정도가 잘 맞아요.',
+    '상대가 답하기 쉬운 말로 시작하면 온도가 덜 부담스럽게 올라갈 수 있어요.',
+    '대화가 이어지면 바로 결론을 묻지 말고 그 분위기를 조금 더 살려 보세요.',
+  ]));
 
   return {
-    oneLineConclusion: mood,
+    oneLineConclusion,
     questionCategory: '우리 사이 온도',
-    card1Meaning: detail,
-    totalFlow: `${mood}\n${detail}\n오늘은 관계의 답을 단번에 확인하기보다, 서로가 편하게 반응할 수 있는 온도를 만드는 게 핵심이에요.`,
+    card1Meaning,
+    card2Meaning,
+    totalFlow: clean(`${oneLineConclusion}\n${card1Meaning}\n${card2Meaning}`),
     caution,
-    actionAdvice: advice,
+    actionAdvice,
     followUpQuestions: ['오늘 먼저 연락해도 괜찮을까요?', '그 사람의 진짜 마음은 무엇일까요?', '우리 관계는 앞으로 어떻게 흘러갈까요?'],
     temperature,
   };
