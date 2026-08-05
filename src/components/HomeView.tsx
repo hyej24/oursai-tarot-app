@@ -17,6 +17,7 @@ import { getKstDateKey } from '../lib/kstDate';
 interface HomeViewProps {
   onSubmitQuestion: (question: string) => void;
   gyeolTokenBalance?: number;
+  dailyFreeAvailable?: boolean;
   dailyGyeolTokenClaimed?: boolean;
   onClaimDailyTokens?: () => void;
   onWatchAdForQuestion?: () => void;
@@ -124,7 +125,7 @@ function hasSavedTemperature(): boolean {
   }
 }
 
-export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0 }: HomeViewProps) {
+export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0, dailyFreeAvailable = true }: HomeViewProps) {
   const [selectedMenu, setSelectedMenu] = useState<LoveMenu | null>(null);
   const [situationText, setSituationText] = useState('');
   const [isCustomQuestionOpen, setIsCustomQuestionOpen] = useState(false);
@@ -178,7 +179,7 @@ export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0 }: HomeViewPr
 
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex h-[32px] min-w-[112px] items-center justify-center rounded-full border border-[#E2B9AE] bg-white/58 px-4 font-serif text-[13.5px] font-bold text-[#7A5C52] shadow-[0_6px_18px_rgba(92,62,46,0.04)]">
-          오늘 무료 1개
+          오늘 무료 {dailyFreeAvailable ? 1 : 0}개
         </div>
         <div className="flex h-[32px] min-w-[112px] items-center justify-center rounded-full border border-[#E2B9AE] bg-white/58 px-4 font-serif text-[13.5px] font-bold text-[#C87470] shadow-[0_6px_18px_rgba(92,62,46,0.04)]">
           추가 질문권 {gyeolTokenBalance}개

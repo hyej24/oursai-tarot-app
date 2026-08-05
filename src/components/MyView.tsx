@@ -106,7 +106,6 @@ export function MyView({
           <Share2 className="h-4 w-4" />
           앱 공유하고 질문권 +{SHARE_READING_PASS_REWARD}
         </button>
-        <p className="mt-1 text-[11px] text-[#B09A8E]">하루 한 번 받을 수 있어요.</p>
 
         <button
           type="button"

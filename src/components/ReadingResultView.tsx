@@ -10,6 +10,7 @@ import { DAILY_TEMPERATURE_READING_KEY, DAILY_TEMPERATURE_READING_VERSION, READI
 import { generateLocalPaidReading } from '../lib/localTarotReading';
 import { apiPath } from '../lib/apiBase';
 import { getKstDateKey } from '../lib/kstDate';
+import { shareAppMessage } from '../lib/appShare';
 
 interface ReadingResultViewProps {
   menuId: string;
@@ -152,10 +153,9 @@ const READING_LOADING_MESSAGES = [
   "카드들이 이어지는 분위기를 조용히 살펴보고 있어요.",
   "지금 질문에서 가장 중요한 포인트를 정리하고 있어요.",
   "카드가 가리키는 흐름을 질문에 맞춰 정리하고 있어요.",
-  "질문자님이 바로 이해할 수 있게 문장을 다듬고 있어요.",
   "선택한 카드들의 공통된 방향을 맞춰 보고 있어요.",
   "지금 가장 궁금한 지점에 맞춰 답을 고르고 있어요.",
-  "리딩이 자연스럽게 읽히도록 정리하고 있어요."
+  "질문과 카드의 의미를 함께 살펴보는 중이에요."
 ];
 
 function pickNextLoadingMessage(current: string) {
@@ -533,20 +533,12 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       return;
     }
 
-    const startedAt = Date.now();
-
     const timer = window.setInterval(() => {
       setLoadingSub(current => pickNextLoadingMessage(current));
-      if (Date.now() - startedAt > 9000) {
-        setLoadingStep(props.menuId === 'daily-temperature'
-          ? "오늘 온도 리딩을 조금 더 다듬고 있어요."
-          : "리딩 문장을 조금 더 자연스럽게 다듬고 있어요."
-        );
-      }
     }, 1800);
 
     return () => window.clearInterval(timer);
-  }, [loading, loadingSession, props.menuId]);
+  }, [loading, loadingSession]);
 
   // Robust decoupled fetch reading supporting auto retries
   const fetchReading = async (isRetry = false) => {
@@ -922,19 +914,19 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     const shareUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: '타로 : 우리 사이 온도',
-          text: shareText,
-          url: shareUrl
-        });
-        const rewarded = props.onShareReward?.();
+      const result = await shareAppMessage({
+        title: '타로 : 우리 사이 온도',
+        text: shareText,
+        url: shareUrl
+      });
+
+      if (result !== 'failed') {
         setShowShareModal(false);
-        alert(rewarded ? '앱 공유 보상으로 질문권 1개가 추가됐어요.' : '오늘 앱 공유 보상은 이미 받았어요.');
+        alert(result === 'copied' ? '공유 문구와 링크를 복사했어요.' : '공유창을 열었어요.');
         return;
       }
 
-      alert('이 환경에서는 공유창을 바로 열 수 없어요. 앱에서는 공유 기능으로 연결할 수 있어요.');
+      alert('공유창을 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     } catch (error) {
       if ((error as Error)?.name !== 'AbortError') {
         alert('공유창을 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');

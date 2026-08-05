@@ -26,10 +26,12 @@ import {
   GYEOL_TOKEN_MIGRATION_KEY,
   QUESTION_PASS_PACKAGES,
   READING_TOKEN_COST,
+  SHARE_REWARD_MODULE_ID,
   SHARE_READING_PASS_REWARD
 } from './lib/appConstants';
 import { getKstDateKey } from './lib/kstDate';
 import { decodeSharedReading, SHARED_READING_QUERY_KEY } from './lib/sharedReadingLink';
+import { openShareReward } from './lib/appShare';
 
 type ActiveTab = 'home' | 'records' | 'my';
 type FlowStep = 
@@ -359,17 +361,13 @@ export default function App() {
   };
 
   const shareAppAndGrantReadingPass = async () => {
-    const title = '타로 : 우리 사이 온도';
-    const text = '오늘 우리 사이 온도와 마음의 흐름을 확인해보세요.';
-    const url = window.location.origin;
+    const result = await openShareReward(SHARE_REWARD_MODULE_ID);
+    if (result === 'closed') {
+      return null;
+    }
 
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, text, url });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
-      }
-    } catch {
+    if (result === 'unsupported' || result === 'failed') {
+      alert('앱인토스 안에서만 친구 공유 보상을 받을 수 있어요. 토스 앱에서 다시 시도해 주세요.');
       return null;
     }
 
@@ -551,6 +549,7 @@ export default function App() {
                 <HomeView
                   onSubmitQuestion={handleSubmitQuestion}
                   gyeolTokenBalance={gyeolTokenBalance}
+                  dailyFreeAvailable={!firstFreeReadingUsed}
                   onWatchAdForQuestion={() => grantAdReadingPass()}
                   onPaidQuestion={() => grantPaidReadingPass()}
                 />
