@@ -507,6 +507,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     19: 0.9, // Sun
     36: 0.6, // Ace of Cups
     37: 0.8, // Two of Cups
+    41: 0.55, // Six of Cups
     45: 0.7, // Ten of Cups
     69: 0.4, // Six of Pentacles
   };
@@ -553,6 +554,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     18: '마음보다 불안과 눈치가 앞서서 실제보다 더 차갑게 느껴질 수 있어요.',
     19: '감정이 비교적 밝고 숨김없이 드러나기 쉬운 따뜻한 흐름이에요.',
     37: '서로 마주 보는 감정선이 살아 있어서 관계 온도가 부드럽게 올라가기 쉬워요.',
+    41: '다정했던 기억이나 익숙한 호감이 올라와서 오늘의 온도를 따뜻하게 붙잡아 주는 흐름이에요.',
     40: '아쉬움이나 후회가 남아 있어서 온기가 있어도 마음이 쉽게 가라앉을 수 있어요.',
     43: '마음을 접으려는 흐름이 섞여 있어서 다가가도 반응이 느리게 돌아올 수 있어요.',
     52: '상처나 섭섭함이 먼저 올라와서 오늘의 온도를 예민하게 만들 수 있어요.',
@@ -597,6 +599,13 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
   const reversedNote = card.isReversed
     ? '다만 역방향의 기운이 섞여 있어서 마음이 있어도 표현이 꼬이거나, 괜히 반대로 행동할 수 있어요.'
     : '정방향의 흐름이라 마음과 행동이 완전히 따로 놀기보다는, 분위기만 맞으면 자연스럽게 이어질 여지가 있어요.';
+  const warmCardSpecificCautions = [
+    `오늘은 좋은 분위기가 있어도 너무 빨리 확답을 확인하려고 하면 온도가 살짝 굳을 수 있어요.\n따뜻한 흐름일수록 상대가 편하게 머물 수 있는 여백을 남겨 주세요.\n오늘은 마음을 시험하기보다 자연스럽게 이어 가는 쪽이 좋아요.`,
+    `상대가 다정하게 반응해도 바로 큰 의미로 몰아가면 부담이 될 수 있어요.\n좋은 신호는 천천히 쌓아 두고, 오늘은 편안한 대화의 결을 지키는 게 좋아요.\n따뜻한 분위기를 오래 유지하는 게 더 중요해요.`,
+    `오늘은 추억이나 익숙함이 좋게 작용할 수 있지만, 과거 이야기를 너무 무겁게 꺼내면 분위기가 흐려질 수 있어요.\n가볍게 웃을 수 있는 쪽으로만 건드려 주세요.\n편한 감정이 먼저 살아나야 다음 흐름도 부드러워져요.`,
+    `마음이 좋게 움직이는 날이라도 질문자님이 너무 앞서가면 상대가 속도를 맞추기 어려울 수 있어요.\n오늘은 한 번에 확인하기보다 반응을 보며 조금씩 가까워지는 게 좋아요.\n다정함을 재촉하지 않는 게 포인트예요.`,
+    `오늘은 기대가 커지기 쉬운 온도예요.\n그래서 작은 반응에도 마음이 크게 움직일 수 있으니, 좋은 흐름을 너무 빨리 결론으로 만들지는 마세요.\n편안함을 유지하면 온기가 더 오래 가요.`
+  ];
   const cardSpecificCautions = [
     `먼저 결론을 정해 놓고 상대의 반응을 끼워 맞추면 마음이 더 복잡해질 수 있어요.\n오늘은 보이는 행동과 실제 마음 사이에 약간의 틈이 있을 수 있어요.\n한 번의 답장, 한 번의 표정만으로 전체 분위기를 확정하지 않는 게 좋아요.`,
     `오늘은 말투 하나가 크게 들릴 수 있는 날이에요.\n상대가 무심하게 보여도 정말 무심한 건지, 그냥 여유가 없는 건지는 조금 더 봐야 해요.\n질문자님 마음이 먼저 지치지 않게 해석의 속도를 늦춰 주세요.`,
@@ -634,8 +643,16 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     `오늘은 질문자님이 먼저 속도를 낮추면 관계가 덜 삐걱거려요.\n큰 고백이나 긴 설명보다, 상대가 편하게 받을 수 있는 한마디가 좋아요.\n조금 심심해 보일 정도의 담백함이 오히려 오늘은 안전해요.`
   ];
   const cardSpecificAdvices = isHeavyTemperatureCard ? heavyCardSpecificAdvices : warmCardSpecificAdvices;
-  const cardSpecificCaution = cardSpecificCautions[(cardIndex + (card.isReversed ? 3 : 0)) % cardSpecificCautions.length];
-  const cardSpecificAdvice = cardSpecificAdvices[(cardIndex + (card.isReversed ? 5 : 0)) % cardSpecificAdvices.length];
+  const cardSpecificCautionPool = temperature >= 37 || (card.suit === 'cups' && affection >= 60)
+    ? warmCardSpecificCautions
+    : cardSpecificCautions;
+  let cardSpecificCaution = cardSpecificCautionPool[(cardIndex + (card.isReversed ? 3 : 0)) % cardSpecificCautionPool.length];
+  let cardSpecificAdvice = cardSpecificAdvices[(cardIndex + (card.isReversed ? 5 : 0)) % cardSpecificAdvices.length];
+
+  if (Number(card.id) === 41 && !card.isReversed) {
+    cardSpecificCaution = `오늘은 따뜻한 기억이나 익숙한 마음이 살아나는 날이에요.\n다만 그 온기를 바로 확답으로 몰아가면 상대가 살짝 부담스러워질 수 있어요.\n좋은 분위기는 재촉하지 않을 때 더 오래 이어져요.`;
+    cardSpecificAdvice = `오늘은 예전의 편안했던 분위기를 가볍게 꺼내 보세요.\n무거운 질문보다 웃을 수 있는 말, 익숙한 이야기, 다정한 리액션이 잘 맞아요.\n상대가 편안함을 느끼면 마음도 자연스럽게 더 가까워질 수 있어요.`;
+  }
 
   let mood = '';
   let detail = '';
