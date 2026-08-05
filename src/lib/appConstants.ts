@@ -1,4 +1,4 @@
-export const DAILY_FREE_READING_KEY = 'tarot_daily_free_reading_date_launch_v1';
+export const DAILY_FREE_READING_KEY = 'tarot_daily_free_reading_date_launch_v2';
 export const BONUS_READING_COUNT_KEY = 'tarot_bonus_reading_count';
 export const ATTENDANCE_COUNT_KEY = 'tarot_attendance_count';
 export const ATTENDANCE_LAST_DATE_KEY = 'tarot_last_attendance_date';
