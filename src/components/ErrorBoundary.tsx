@@ -8,6 +8,7 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  errorMessage?: string;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
@@ -16,12 +17,27 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  public static getDerivedStateFromError(_: Error): State {
-    return { hasError: true };
+  public static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      errorMessage: error?.message || error?.name || 'UNKNOWN_RENDER_ERROR',
+    };
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error', error, errorInfo);
+
+    try {
+      localStorage.setItem('tarot_last_render_error', JSON.stringify({
+        message: error?.message || '',
+        name: error?.name || '',
+        stack: error?.stack || '',
+        componentStack: errorInfo?.componentStack || '',
+        at: new Date().toISOString(),
+      }));
+    } catch {
+      // Embedded browsers can block storage. Ignore diagnostics failure.
+    }
   }
 
   public render() {
@@ -42,6 +58,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <p className="text-xs text-[#8A7A71] mt-3 max-w-xs mx-auto leading-relaxed break-keep font-sans">
           잠시 오류가 있었어요. 새로고침하거나 홈으로 돌아가 다시 이어서 확인해 주세요.
         </p>
+
+        {this.state.errorMessage && (
+          <p className="mt-3 max-w-xs rounded-lg bg-white/70 px-3 py-2 text-[10px] leading-relaxed text-[#BD6B65] break-all">
+            오류 코드: {this.state.errorMessage}
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-2.5 w-full max-w-xs">
           <button

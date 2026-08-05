@@ -20,19 +20,34 @@ const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS || 60_0
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX || 30);
 const apiRateLimitHits = new Map<string, { count: number; resetAt: number }>();
 
+function isAllowedTossAppOrigin(origin: string) {
+  try {
+    const hostname = new URL(origin).hostname;
+    return (
+      hostname === "apps.tossmini.com" ||
+      hostname.endsWith(".apps.tossmini.com") ||
+      hostname === "private-apps.tossmini.com" ||
+      hostname.endsWith(".private-apps.tossmini.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 app.use((req, res, next) => {
   const requestOrigin = req.headers.origin;
   const allowAnyOrigin = allowedOrigins.includes("*");
 
   if (allowAnyOrigin) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-  } else if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+  } else if (requestOrigin && (allowedOrigins.includes(requestOrigin) || isAllowedTossAppOrigin(requestOrigin))) {
     res.setHeader("Access-Control-Allow-Origin", requestOrigin);
     res.setHeader("Vary", "Origin");
   }
 
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Client-Request-Id, Accept, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);

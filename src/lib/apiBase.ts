@@ -9,8 +9,10 @@ function getDefaultApiBaseUrl() {
   const isLocal = host === 'localhost' || host === '127.0.0.1';
   const isRender = host.endsWith('onrender.com');
 
-  // Local preview runs through the same Express server, so use the local API.
-  if (isLocal) return '';
+  // Toss app test/production can run the web bundle from a WebView-local origin.
+  // In that environment, relative /api calls point to the app shell instead of Render.
+  // Keep local dev relative only while Vite is running.
+  if (isLocal && import.meta.env.DEV) return '';
   if (isRender) return '';
   return DEFAULT_REMOTE_API_BASE_URL;
 }
