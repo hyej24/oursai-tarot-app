@@ -1312,7 +1312,9 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                     친구에게 앱만 공유할게요
                   </h3>
                   <p className="mt-1.5 text-[14px] leading-relaxed text-[#8A7A71]">
-                    내 질문과 리딩 내용은 공유되지 않아요. 하루 한 번, 공유하면 질문권 1개를 받을 수 있어요.
+                    내 질문과 리딩 내용은 공유되지 않아요.
+                    <br />
+                    공유가 완료되면 질문권 1개를 받을 수 있어요.
                   </p>
                 </div>
               </div>
@@ -1326,26 +1328,10 @@ export function ReadingResultView(props: ReadingResultViewProps) {
               </button>
             </div>
 
-            <div className="mt-4 rounded-[18px] border border-[#EAE3D2] bg-[#F3EFE6]/70 p-3.5">
-              <div className="mb-2 inline-flex rounded-full bg-[#FFFDFC] px-2.5 py-1 text-[12px] font-bold text-[#BD6B65]">
-                공유될 문구
-              </div>
-              <textarea
-                value={appShareMessage}
-                onChange={(event) => setAppShareMessage(event.target.value)}
-                className="min-h-[92px] w-full resize-none rounded-[15px] border border-[#EAE3D2] bg-[#FFFDFC] px-4 py-3 text-[15px] leading-relaxed text-[#3C2F2F] outline-none transition focus:border-[#E6A19C] focus:ring-2 focus:ring-[#F8E8E4]"
-                maxLength={80}
-                aria-label="공유될 문구 수정"
-              />
-              <p className="mt-2 text-right text-[12px] text-[#A69785]">
-                {appShareMessage.length}/80
-              </p>
-            </div>
-
             <button
               type="button"
               onClick={handleSafeAppShare}
-              className="mt-4 w-full rounded-[16px] bg-[#BD6B65] py-3.5 font-serif text-[15px] font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
+              className="mt-5 w-full rounded-[16px] bg-[#BD6B65] py-3.5 font-serif text-[15px] font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
             >
               카톡으로 공유하기
             </button>
