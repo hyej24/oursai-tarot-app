@@ -1541,7 +1541,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                 </div>
                 <div>
                   <h3 className="font-serif text-[20px] font-bold tracking-[-0.03em] text-[#3C2F2F]">
-                    친구에게 앱만 공유할게요
+                    친구에게 앱 공유하기
                   </h3>
                   <p className="mt-1.5 text-[14px] leading-relaxed text-[#8A7A71]">
                     내 질문과 리딩 내용은 공유되지 않아요.
@@ -1565,7 +1565,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
               onClick={handleSafeAppShare}
               className="mt-5 w-full rounded-[16px] bg-[#BD6B65] py-3.5 font-serif text-[15px] font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
             >
-              카톡으로 공유하기
+              앱 공유하고 질문권 받기
             </button>
             <button
               type="button"
