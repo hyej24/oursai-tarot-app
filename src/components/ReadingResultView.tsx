@@ -23,6 +23,7 @@ interface ReadingResultViewProps {
   onAskFollowUp?: (question: string) => void;
   onReadingSuccess?: () => boolean | void;
   onChargeQuestionPass?: () => void;
+  onUseAdReadingAccess?: () => Promise<boolean>;
   questionPassBalance?: number;
   initialReadingResult?: StandardReadingResult | null;
 }
@@ -827,6 +828,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   const [paidAiLoading, setPaidAiLoading] = useState<boolean>(false);
 
   const [showInlinePassPrompt, setShowInlinePassPrompt] = useState(false);
+  const [pendingFollowUpQuestion, setPendingFollowUpQuestion] = useState<string>('');
   const [appShareMessage, setAppShareMessage] = useState('오늘 우리 사이 온도 봤어 🔮\n너도 한 번 확인해봐!');
 
   // States to animate cards and save records
@@ -842,6 +844,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
   useEffect(() => {
     setShowInlinePassPrompt(false);
+    setPendingFollowUpQuestion('');
   }, [props.question, props.cards]);
 
   useEffect(() => {
@@ -1275,11 +1278,25 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
   const handleFollowUpClick = (followUp: string) => {
     if ((props.questionPassBalance ?? 0) < READING_TOKEN_COST) {
+      setPendingFollowUpQuestion(followUp);
       setShowInlinePassPrompt(true);
       return;
     }
 
     props.onAskFollowUp?.(followUp);
+  };
+
+  const handleAdFollowUpClick = async () => {
+    if (!pendingFollowUpQuestion || !props.onUseAdReadingAccess) {
+      props.onChargeQuestionPass?.();
+      return;
+    }
+
+    const granted = await props.onUseAdReadingAccess();
+    if (!granted) return;
+
+    setShowInlinePassPrompt(false);
+    props.onAskFollowUp?.(pendingFollowUpQuestion);
   };
 
   // Rendering Loading View
@@ -1543,13 +1560,20 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                 <div className="text-center">
                   <p className="font-serif text-[16px] font-bold text-[#3C2F2F]">질문권이 필요해요</p>
                   <p className="mt-2 text-[14px] leading-relaxed text-[#8A7A71] break-keep">
-                    이 질문을 바로 보려면 질문권 1개가 필요해요.
+                    광고를 보면 오늘 한 번, 질문권 없이 이어서 볼 수 있어요.
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={props.onChargeQuestionPass}
+                  onClick={handleAdFollowUpClick}
                   className="mt-4 min-h-[48px] w-full rounded-[14px] bg-[#BD6B65] text-[14px] font-serif font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
+                >
+                  광고 보고 이어서 보기
+                </button>
+                <button
+                  type="button"
+                  onClick={props.onChargeQuestionPass}
+                  className="mt-2 min-h-[42px] w-full rounded-[14px] border border-[#EAE3D2] bg-[#FFFDFC] text-[13px] font-serif font-bold text-[#BD6B65]"
                 >
                   질문권 충전하기
                 </button>

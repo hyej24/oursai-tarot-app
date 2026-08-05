@@ -1149,6 +1149,7 @@ export default function App() {
                 onChargeQuestionPass={() => {
                   void grantPaidReadingPass(1);
                 }}
+                onUseAdReadingAccess={showRewardedAdForReadingAccess}
                 questionPassBalance={gyeolTokenBalance}
                 initialReadingResult={sharedReadingResult}
               />
