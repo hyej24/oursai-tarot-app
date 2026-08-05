@@ -14,7 +14,6 @@ import { dataSync } from './lib/dataSync';
 import { classifyQuestion } from './lib/questionTarot';
 import { TAROT_DECK } from './data/tarotCards';
 import {
-  AD_GYEOL_TOKEN_REWARD,
   ADDITIONAL_QUESTION_PRICE_TEXT,
   BONUS_READING_COUNT_KEY,
   DAILY_AD_REWARD_DATE_KEY,
@@ -302,6 +301,10 @@ export default function App() {
 
   const handleSubmitQuestion = (question: string) => {
     if (question.trim() === '오늘, 그 사람과 나의 온도는 몇 도일까요?') {
+      const savedCard = getTodaySavedTemperatureCard();
+      if (!savedCard) {
+        localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, getKstDateKey());
+      }
       startDailyTemperatureFlow();
       return;
     }
@@ -327,27 +330,8 @@ export default function App() {
     setActiveTab('home');
   };
 
-  const grantAdTokenOnly = () => {
-    const today = getKstDateKey();
-    if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
-      return false;
-    }
-    localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
-    addGyeolTokens(AD_GYEOL_TOKEN_REWARD);
-    return true;
-  };
-
-  const grantAdReadingPass = () => {
-    const granted = grantAdTokenOnly();
-    if (!granted) {
-      return false;
-    }
-    continuePendingQuestion();
-    return true;
-  };
-
   const grantPaidReadingPass = (count = 1) => {
-    alert('결제 기능은 지금 준비 중이에요. 지금은 공유하거나 광고를 보고 이어서 볼 수 있어요.');
+    alert('결제 기능은 지금 준비 중이에요. 지금은 공유하거나 질문권을 충전해 주세요.');
   };
 
   const grantShareReadingPass = () => {
@@ -550,7 +534,6 @@ export default function App() {
                   onSubmitQuestion={handleSubmitQuestion}
                   gyeolTokenBalance={gyeolTokenBalance}
                   dailyFreeAvailable={!firstFreeReadingUsed}
-                  onWatchAdForQuestion={() => grantAdReadingPass()}
                   onPaidQuestion={() => grantPaidReadingPass()}
                 />
               )}
@@ -566,7 +549,6 @@ export default function App() {
                 <MyView
                   gyeolTokenBalance={gyeolTokenBalance}
                   dailyFreeAvailable={!firstFreeReadingUsed}
-                  onClaimAdReward={grantAdTokenOnly}
                   onShareAppReward={shareAppAndGrantReadingPass}
                 />
               )}
@@ -1029,21 +1011,9 @@ export default function App() {
                 질문권이 필요해요
               </h3>
               <p className="mt-2 text-[14px] leading-relaxed text-[#8A7A71] break-keep">
-                오늘 기본 질문권은 이미 사용했어요. 이어서 보려면 공유하거나, 광고를 보고 질문권을 받을 수 있어요.
+                오늘 기본 질문권은 이미 사용했어요. 이어서 보려면 앱을 공유하거나 질문권을 충전해 주세요.
               </p>
               <div className="mt-4 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const granted = grantAdReadingPass();
-                    if (!granted) {
-                      alert('오늘 광고 보상은 이미 받았어요. 공유하거나 질문권을 충전해 주세요.');
-                    }
-                  }}
-                  className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold"
-                >
-                  광고 보고 질문권 {AD_GYEOL_TOKEN_REWARD}개 받기
-                </button>
                 <button
                   type="button"
                   onClick={async () => {

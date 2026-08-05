@@ -444,6 +444,33 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
   const reversedPenalty = card.isReversed ? 0.35 : 0;
   const rawScore = affection * 0.34 + contact * 0.2 + progress * 0.18 + stability * 0.16 + (100 - defense) * 0.12;
   const temperature = Number(Math.max(34.2, Math.min(39.8, 34.4 + rawScore * 0.055 - reversedPenalty)).toFixed(1));
+  const cardName = card.nameKr || card.name || '오늘의 카드';
+  const keywordText = card.keywordKr || '조심스럽게 맞춰 가는 마음';
+  const firstKeyword = keywordText.split(',')[0]?.trim() || keywordText;
+  const cardIndex = Math.abs(Number(card.id || 0));
+  const suitTone = card.type === 'major'
+    ? '오늘은 작은 반응보다 관계 전체의 분위기가 더 크게 움직이는 날이에요.'
+    : card.suit === 'cups'
+      ? '감정선이 예민하게 살아 있어서 말투 하나에도 마음이 쉽게 흔들릴 수 있어요.'
+      : card.suit === 'wands'
+        ? '가만히 있기보다 어느 쪽이든 움직임이 생기기 쉬운 날이에요.'
+        : card.suit === 'swords'
+          ? '마음보다 생각이 앞서면서 서로의 말을 더 신중하게 재는 분위기예요.'
+          : '현실적인 상황이나 각자의 일정이 관계 온도에 꽤 영향을 주는 날이에요.';
+  const cardSpecificOpenings = [
+    `${cardName}의 흐름처럼 오늘은 ${firstKeyword}이 관계의 온도를 살짝 좌우해요.`,
+    `오늘 뽑힌 흐름에서는 ${firstKeyword}이 먼저 보여요.`,
+    `${keywordText} 쪽의 기운이 올라와 있어서, 오늘은 평소보다 반응의 결이 조금 다르게 느껴질 수 있어요.`,
+    `오늘은 ${cardName}이 보여주는 분위기처럼 마음이 바로 드러나기보다 한 번 더 걸러져 나와요.`,
+    `${firstKeyword}이라는 키워드가 강해서, 오늘 두 사람 사이에는 작은 계기 하나가 생각보다 중요해요.`,
+    `지금 흐름은 ${keywordText} 쪽으로 기울어 있어서, 단순히 좋다 싫다로 보기엔 결이 조금 섬세해요.`,
+    `${cardName}이 가진 분위기상 오늘은 상대의 속도와 질문자님의 기대 속도가 조금 다를 수 있어요.`,
+    `오늘 관계의 온도는 ${firstKeyword}을 중심으로 움직여요. 그래서 반응이 바로 오지 않아도 의미가 없는 건 아니에요.`
+  ];
+  const cardSpecificOpening = cardSpecificOpenings[cardIndex % cardSpecificOpenings.length];
+  const reversedNote = card.isReversed
+    ? '다만 역방향의 기운이 섞여 있어서 마음이 있어도 표현이 꼬이거나, 괜히 반대로 행동할 수 있어요.'
+    : '정방향의 흐름이라 마음과 행동이 완전히 따로 놀기보다는, 분위기만 맞으면 자연스럽게 이어질 여지가 있어요.';
 
   let mood = '';
   let detail = '';
@@ -471,6 +498,8 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     caution = '확인받고 싶은 마음으로 연락하면 실망이 커질 수 있어요.\n오늘은 상대 반응보다 질문자님 마음을 안정시키는 게 먼저예요.\n괜히 의미를 크게 붙이면 작은 반응도 크게 흔들릴 수 있어요.';
     advice = '오늘은 먼저 크게 움직이지 말고 한 박자 쉬어 가세요.\n마음이 급할수록 짧고 담백한 말만 남기는 게 좋아요.\n내일이나 분위기가 풀렸을 때 가볍게 다시 건네면 훨씬 자연스러워요.';
   }
+
+  detail = `${cardSpecificOpening}\n${suitTone}\n${reversedNote}\n${detail}`;
 
   return {
     oneLineConclusion: mood,
@@ -676,6 +705,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   // Robust decoupled fetch reading supporting auto retries
   const fetchReading = async (isRetry = false) => {
     const fetchKey = JSON.stringify({
+      version: props.menuId === 'daily-temperature' ? DAILY_TEMPERATURE_READING_VERSION : 'standard',
       menuId: props.menuId,
       question: props.question,
       situation: props.situation,
@@ -756,7 +786,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         writeReadingLock(fetchKey, requestId);
       }
       const requestPromise = existingRequest || (async () => {
-        if (props.menuId === 'relation-temp') {
+        if (props.menuId === 'daily-temperature' || props.menuId === 'relation-temp') {
           return generateDailyTemperatureReading(props.cards[0]);
         }
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Gem, Share2 } from 'lucide-react';
 import {
-  AD_GYEOL_TOKEN_REWARD,
   QUESTION_PASS_PACKAGES,
   READING_TOKEN_COST,
   SHARE_READING_PASS_REWARD
@@ -10,14 +9,12 @@ import {
 interface MyViewProps {
   gyeolTokenBalance: number;
   dailyFreeAvailable: boolean;
-  onClaimAdReward: () => boolean;
   onShareAppReward: () => Promise<boolean | null>;
 }
 
 export function MyView({
   gyeolTokenBalance,
   dailyFreeAvailable,
-  onClaimAdReward,
   onShareAppReward
 }: MyViewProps) {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
@@ -29,15 +26,6 @@ export function MyView({
 
   const showPaymentPendingMessage = () => {
     showFeedback('결제 기능은 지금 준비 중이에요.');
-  };
-
-  const claimAdReward = () => {
-    const granted = onClaimAdReward();
-    showFeedback(
-      granted
-        ? `광고 보상 질문권 ${AD_GYEOL_TOKEN_REWARD}개가 지급됐어요.`
-        : '오늘 광고 보상은 이미 받았어요.'
-    );
   };
 
   const claimShareReward = async () => {
@@ -88,7 +76,7 @@ export function MyView({
               <strong className="font-serif text-[26px] leading-none text-[#BD6B65]">{gyeolTokenBalance}</strong>
               <span className="pb-0.5 text-[13px] text-[#8A7A71]">개</span>
             </div>
-            <p className="mt-0.5 text-[11px] leading-snug text-[#B09A8E]">공유·광고·구매</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-[#B09A8E]">공유·구매</p>
           </div>
         </div>
 
@@ -105,14 +93,6 @@ export function MyView({
         >
           <Share2 className="h-4 w-4" />
           앱 공유하고 질문권 +{SHARE_READING_PASS_REWARD}
-        </button>
-
-        <button
-          type="button"
-          onClick={claimAdReward}
-          className="mt-2 w-full min-h-[42px] rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold"
-        >
-          광고 보고 질문권 +{AD_GYEOL_TOKEN_REWARD}
         </button>
 
         <div className="mt-2 grid grid-cols-1 gap-2">

@@ -20,7 +20,6 @@ interface HomeViewProps {
   dailyFreeAvailable?: boolean;
   dailyGyeolTokenClaimed?: boolean;
   onClaimDailyTokens?: () => void;
-  onWatchAdForQuestion?: () => void;
   onPaidQuestion?: () => void;
 }
 
@@ -209,7 +208,7 @@ export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0, dailyFreeAva
             <span className="ml-1 text-[15px] font-extrabold text-[#D87975]">{temperature}</span>
           )}
           <span className="rounded-full bg-[#F6DEDA] px-2.5 py-0.5 text-[11px] font-bold text-[#C87470]">
-            무료
+            {hasTemperatureReading ? '오늘 기록' : '광고'}
           </span>
         </div>
 
@@ -227,7 +226,7 @@ export function HomeView({ onSubmitQuestion, gyeolTokenBalance = 0, dailyFreeAva
           onClick={() => onSubmitQuestion(TEMPERATURE_QUESTION)}
           className="mt-[16px] flex h-[48px] w-full items-center justify-center gap-2 rounded-[17px] bg-[#CA7C73] font-serif text-[15.5px] font-bold text-white shadow-[0_10px_20px_rgba(202,124,115,0.17)] transition-transform active:scale-[0.99]"
         >
-          <span>{hasTemperatureReading ? '오늘 온도 다시 확인하기' : '우리 사이 온도 보기 · 무료'}</span>
+          <span>{hasTemperatureReading ? '오늘 온도 다시 확인하기' : '오늘의 온도 확인하기 · 광고 시청'}</span>
           <ArrowRight className="h-[16px] w-[16px]" />
         </button>
       </section>
