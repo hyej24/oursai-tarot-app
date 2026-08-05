@@ -6,11 +6,11 @@ import { calculateRelationshipTemperature } from '../data/tarotCards';
 import { readingStorage } from '../lib/readingStorage';
 import { TarotCardImage } from './TarotCardImage';
 import { isRelationshipCategory, QuestionCategory } from '../lib/questionTarot';
-import { DAILY_TEMPERATURE_READING_KEY, DAILY_TEMPERATURE_READING_VERSION, READING_TOKEN_COST } from '../lib/appConstants';
+import { DAILY_TEMPERATURE_READING_KEY, DAILY_TEMPERATURE_READING_VERSION, READING_TOKEN_COST, SHARE_REWARD_MODULE_ID } from '../lib/appConstants';
 import { generateLocalPaidReading } from '../lib/localTarotReading';
 import { apiPath } from '../lib/apiBase';
 import { getKstDateKey } from '../lib/kstDate';
-import { shareAppMessage } from '../lib/appShare';
+import { openShareReward } from '../lib/appShare';
 
 interface ReadingResultViewProps {
   menuId: string;
@@ -910,23 +910,21 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   };
 
   const handleSafeAppShare = async () => {
-    const shareText = appShareMessage.trim() || '오늘 우리 사이 온도 봤어 🔮\n너도 한 번 확인해봐!';
-    const shareUrl = typeof window !== 'undefined' ? window.location.origin : '';
-
     try {
-      const result = await shareAppMessage({
-        title: '타로 : 우리 사이 온도',
-        text: shareText,
-        url: shareUrl
-      });
+      const result = await openShareReward(SHARE_REWARD_MODULE_ID);
 
-      if (result !== 'failed') {
+      if (result === 'rewarded') {
+        const rewarded = props.onShareReward?.();
         setShowShareModal(false);
-        alert(result === 'copied' ? '공유 문구와 링크를 복사했어요.' : '공유창을 열었어요.');
+        alert(rewarded ? '앱 공유 보상으로 질문권 1개가 추가됐어요.' : '오늘 앱 공유 보상은 이미 받았어요.');
         return;
       }
 
-      alert('공유창을 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      if (result === 'closed') {
+        return;
+      }
+
+      alert('앱인토스 안에서만 친구 공유 보상을 받을 수 있어요. 토스 앱에서 다시 시도해 주세요.');
     } catch (error) {
       if ((error as Error)?.name !== 'AbortError') {
         alert('공유창을 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
