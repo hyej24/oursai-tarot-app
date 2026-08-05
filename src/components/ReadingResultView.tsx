@@ -1532,7 +1532,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       </div>
 
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#3C2F2F]/24 px-4 pb-5 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3C2F2F]/24 px-4 backdrop-blur-[2px]">
           <div className="w-full max-w-[380px] rounded-[26px] border border-[#E6A19C] bg-[#FFFDFC] p-5 shadow-[0_22px_54px_rgba(60,47,47,0.22)] animate-fadeIn">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
