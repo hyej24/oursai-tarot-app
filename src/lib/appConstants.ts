@@ -11,6 +11,7 @@ export const DAILY_SHARE_REWARD_DATE_KEY = 'tarot_daily_share_reward_date_launch
 export const DAILY_TEMPERATURE_READING_KEY = 'tarot_daily_temperature_reading';
 export const DAILY_TEMPERATURE_READING_VERSION = 'daily-temperature-reading-v10-no-card-keyword-mentions';
 export const SHARE_REWARD_MODULE_ID = '80fa9e5f-afac-4e81-813c-ff30feac76a5';
+export const REWARDED_AD_GROUP_ID = 'ait.v2.live.437f612be4b64bef';
 
 export const READING_TOKEN_COST = 1;
 export const SHARE_READING_PASS_REWARD = 1;

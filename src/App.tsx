@@ -22,6 +22,7 @@ import {
   GYEOL_TOKEN_BALANCE_KEY,
   GYEOL_TOKEN_MIGRATION_KEY,
   QUESTION_PASS_PACKAGES,
+  REWARDED_AD_GROUP_ID,
   READING_TOKEN_COST
 } from './lib/appConstants';
 import { getKstDateKey } from './lib/kstDate';
@@ -407,14 +408,106 @@ export default function App() {
     }
   };
 
-  const useDailyAdReadingAccess = () => {
+  const showRewardedAdForReadingAccess = async () => {
     const today = getKstDateKey();
     if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
       return false;
     }
-    localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
-    adReadingAccessPendingRef.current = true;
-    return true;
+
+    try {
+      const framework = await import('@apps-in-toss/web-framework');
+      const loadFullScreenAd = (framework as any).loadFullScreenAd;
+      const showFullScreenAd = (framework as any).showFullScreenAd;
+
+      if (!loadFullScreenAd?.isSupported?.() || !showFullScreenAd?.isSupported?.()) {
+        throw new Error('REWARDED_AD_NOT_SUPPORTED');
+      }
+
+      const loaded = await new Promise<boolean>((resolve) => {
+        let cleanup: (() => void) | undefined;
+        let settled = false;
+
+        const finish = (success: boolean) => {
+          if (settled) return;
+          settled = true;
+          cleanup?.();
+          resolve(success);
+        };
+
+        cleanup = loadFullScreenAd({
+          options: { adGroupId: REWARDED_AD_GROUP_ID },
+          onEvent: (event: any) => {
+            if (event?.type === 'loaded') {
+              finish(true);
+            }
+          },
+          onError: (error: unknown) => {
+            console.error('Rewarded ad load error', error);
+            finish(false);
+          }
+        });
+
+        window.setTimeout(() => finish(false), 15000);
+      });
+
+      if (!loaded) {
+        alert('광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return false;
+      }
+
+      const rewarded = await new Promise<boolean>((resolve) => {
+        let cleanup: (() => void) | undefined;
+        let settled = false;
+        let earnedReward = false;
+
+        const finish = (success: boolean) => {
+          if (settled) return;
+          settled = true;
+          cleanup?.();
+          resolve(success);
+        };
+
+        cleanup = showFullScreenAd({
+          options: { adGroupId: REWARDED_AD_GROUP_ID },
+          onEvent: (event: any) => {
+            const type = String(event?.type ?? '');
+            if (type === 'userEarnedReward') {
+              earnedReward = true;
+              finish(true);
+              return;
+            }
+
+            if (type === 'dismissed') {
+              finish(earnedReward);
+              return;
+            }
+
+            if (type === 'failedToShow') {
+              finish(false);
+            }
+          },
+          onError: (error: unknown) => {
+            console.error('Rewarded ad show error', error);
+            finish(false);
+          }
+        });
+
+        window.setTimeout(() => finish(earnedReward), 60000);
+      });
+
+      if (!rewarded) {
+        alert('광고 시청이 완료되지 않았어요.');
+        return false;
+      }
+
+      localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
+      adReadingAccessPendingRef.current = true;
+      return true;
+    } catch (error) {
+      console.error('Rewarded ad unavailable', error);
+      alert('토스 앱에서 광고를 볼 수 있을 때 사용할 수 있어요.');
+      return false;
+    }
   };
 
   const handlePaidFollowUpQuestion = (question: string) => {
@@ -1078,12 +1171,9 @@ export default function App() {
               <div className="mt-4 space-y-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    const granted = useDailyAdReadingAccess();
-                    if (!granted) {
-                      alert('오늘 광고 보상은 이미 사용했어요. 질문권을 충전해 주세요.');
-                      return;
-                    }
+                  onClick={async () => {
+                    const granted = await showRewardedAdForReadingAccess();
+                    if (!granted) return;
                     continuePendingQuestion();
                   }}
                   className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold shadow-[0_10px_20px_rgba(189,107,101,0.18)]"
