@@ -939,21 +939,13 @@ function getDailyTemperatureCardProfile(card: TarotCard, temperature: number): D
   return reversed ? invertTemperatureProfile(base, 'pentacles') : base;
 }
 
-function invertTemperatureProfile(profile: DailyTemperatureCardProfile, suit?: string): DailyTemperatureCardProfile {
-  const reverseTone = suit === 'wands'
-    ? '원래는 움직임이 강한 흐름이지만 오늘은 속도가 엇갈리거나 충동이 꼬일 수 있어요.'
-    : suit === 'cups'
-      ? '원래는 감정이 살아 있는 흐름이지만 오늘은 표현이 늦거나 감정이 한 번 비틀려 나올 수 있어요.'
-      : suit === 'swords'
-        ? '원래는 생각과 말이 선명한 흐름이지만 오늘은 오해나 과한 판단이 끼기 쉬워요.'
-        : '원래는 현실적인 안정감이 중요한 흐름이지만 오늘은 여유나 균형이 조금 흔들릴 수 있어요.';
-
+function invertTemperatureProfile(profile: DailyTemperatureCardProfile, _suit?: string): DailyTemperatureCardProfile {
   return {
-    tone: reverseTone,
-    detail: `${profile.detail}\n다만 오늘은 그 장점이 바로 매끄럽게 나오기보다 조금 어긋나거나 늦게 표현될 수 있어요.\n마음이 완전히 반대라기보다 표현 방식과 타이밍이 흐트러진 쪽에 가까워요.`,
-    person: `${profile.person}\n다만 오늘은 상대가 그 마음을 자연스럽게 보여 주기보다 어색하게 감추거나 반대로 행동할 수 있어요.`,
-    caution: `오늘은 좋은 의도도 오해되기 쉬워요.\n${profile.caution}`,
-    advice: `오늘은 속도를 낮추고 말의 온도를 부드럽게 조절해 보세요.\n${profile.advice}`
+    tone: profile.tone,
+    detail: `${profile.detail}\n오늘은 같은 마음도 곧장 드러나기보다 타이밍이나 표현 방식에서 살짝 어긋나 보일 수 있어요.\n그래도 흐름 전체를 보면 마음이 완전히 반대로 꺾였다기보다는, 표현의 결이 고르지 않은 쪽에 가까워요.`,
+    person: `${profile.person}\n다만 오늘은 상대가 마음을 보여 주는 방식이 조금 서툴거나 일정하지 않을 수 있어요.`,
+    caution: `${profile.caution}\n특히 오늘은 한 번의 반응만 보고 마음 전체를 확정하지 않는 게 좋아요.`,
+    advice: `${profile.advice}\n상대 반응이 예상과 조금 달라도 바로 밀어붙이기보다, 질문자님 쪽에서 먼저 편안한 리듬을 잡아 주세요.`
   };
 }
 
