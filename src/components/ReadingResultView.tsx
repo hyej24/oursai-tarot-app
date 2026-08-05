@@ -723,7 +723,9 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     setLoadingSession(current => current + 1);
 
     const loadingStartedAt = Date.now();
-    const minimumLoadingMs = isRetry ? 250 : 350;
+    const minimumLoadingMs = props.menuId === 'daily-temperature'
+      ? (isRetry ? 800 : 1200)
+      : (isRetry ? 250 : 350);
 
     if (props.menuId === 'daily-temperature') {
       setLoadingStep("오늘 우리 사이의 온도를 확인하고 있어요.");
