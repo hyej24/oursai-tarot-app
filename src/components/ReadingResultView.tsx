@@ -1114,13 +1114,6 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     temperature >= 37.2 ? '따뜻함은 살아 있지만, 그 온도를 오래 유지하려면 부담 없이 다루는 게 중요해요.' : '온도가 낮게 느껴져도 관계가 바로 끊긴 뜻은 아니고, 지금은 속도를 낮춰 살피는 쪽에 가까워요.',
     '오늘은 작은 말투와 반응의 편안함이 관계 분위기를 크게 바꿀 수 있어요.',
   ]));
-  const card2Meaning = clean(fiveLines([
-    base.person,
-    reversedSoftener.person,
-    contact >= 58 ? '연락이나 대화의 접점은 비교적 열려 있는 편이에요.' : '연락이나 대화는 빠르게 터지기보다 조심스럽게 이어질 가능성이 커요.',
-    defense >= 58 ? '상대는 부담을 느끼면 한 걸음 물러설 수 있으니 편안함이 먼저예요.' : '상대가 편안함을 느끼면 생각보다 부드럽게 반응할 수 있어요.',
-    '겉으로 보이는 반응보다 오늘은 전체적인 태도와 분위기를 같이 보는 게 좋아요.',
-  ]));
   const caution = clean(fiveLines([
     base.caution,
     reversedSoftener.caution,
@@ -1140,8 +1133,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     oneLineConclusion,
     questionCategory: '우리 사이 온도',
     card1Meaning,
-    card2Meaning,
-    totalFlow: clean(`${oneLineConclusion}\n${card1Meaning}\n${card2Meaning}`),
+    totalFlow: clean(`${oneLineConclusion}\n${card1Meaning}`),
     caution,
     actionAdvice,
     followUpQuestions: ['오늘 먼저 연락해도 괜찮을까요?', '그 사람의 진짜 마음은 무엇일까요?', '우리 관계는 앞으로 어떻게 흘러갈까요?'],
@@ -1961,17 +1953,6 @@ export function ReadingResultView(props: ReadingResultViewProps) {
           })}
         </div>
       </div>
-
-      {isDailyTemperature && activeResult.card2Meaning && (
-        <div className="p-4 rounded-xl bg-white/70 border border-[#EAE3D2] mb-4">
-          <h4 className="font-serif text-[15px] font-bold text-[#3C2F2F] mb-2">
-            5. 그 사람이 오늘 보일 수 있는 모습
-          </h4>
-          <p className="text-[14.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
-            {activeResult.card2Meaning}
-          </p>
-        </div>
-      )}
 
       {isDailyTemperature && activeResult.caution && (
         <div className="mb-4 rounded-xl border border-[#F2D1CD] bg-[#FADBD8]/25 p-4">
