@@ -798,6 +798,15 @@ const ERROR_DETAILS: Record<string, { title: string; description: string }> = {
   }
 };
 
+function getStandardReadingErrorCode(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error || 'NETWORK_ERROR');
+  if (ERROR_DETAILS[raw]) return raw;
+  if (raw.includes('timeout') || raw.includes('TIMEOUT')) return 'AI_TIMEOUT';
+  if (raw.includes('rate') || raw.includes('429')) return 'AI_RATE_LIMIT';
+  if (raw.includes('network') || raw.includes('fetch') || raw.includes('Failed to fetch')) return 'NETWORK_ERROR';
+  return 'AI_RESPONSE_INVALID';
+}
+
 export function ReadingResultView(props: ReadingResultViewProps) {
   // Loading states
   const [loading, setLoading] = useState<boolean>(true);
@@ -925,13 +934,14 @@ export function ReadingResultView(props: ReadingResultViewProps) {
           completedKeyRef.current = fetchKey;
           return;
         }
-        const duplicateFallback = props.menuId === 'daily-temperature'
-          ? generateDailyTemperatureReading(props.cards[0])
-          : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle);
-        readingResultCache.set(fetchKey, duplicateFallback);
-        setResult(duplicateFallback);
-        completedKeyRef.current = fetchKey;
-        return;
+        if (props.menuId === 'daily-temperature') {
+          const duplicateFallback = generateDailyTemperatureReading(props.cards[0]);
+          readingResultCache.set(fetchKey, duplicateFallback);
+          setResult(duplicateFallback);
+          completedKeyRef.current = fetchKey;
+          return;
+        }
+        throw new Error('AI_BUSY');
       }
 
       const cachedResult = !isRetry ? readingResultCache.get(fetchKey) : undefined;
@@ -1018,16 +1028,12 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         return;
       }
       console.error("Standard Reading Fetch Error:", err);
-      const fallbackReading = props.menuId === 'daily-temperature'
-        ? generateDailyTemperatureReading(props.cards[0])
-        : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle);
-
-      readingResultCache.set(fetchKey, fallbackReading);
-      writePersistentReading(fetchKey, props.menuId, fallbackReading);
-
-      if (props.menuId === 'daily-temperature' && props.cards[0] && typeof window !== 'undefined') {
+      if (props.menuId === 'daily-temperature') {
+        const fallbackReading = generateDailyTemperatureReading(props.cards[0]);
+        readingResultCache.set(fetchKey, fallbackReading);
+        writePersistentReading(fetchKey, props.menuId, fallbackReading);
         const temperature = Number(fallbackReading.temperature);
-        if (Number.isFinite(temperature)) {
+        if (props.cards[0] && typeof window !== 'undefined' && Number.isFinite(temperature)) {
           localStorage.setItem(DAILY_TEMPERATURE_READING_KEY, JSON.stringify({
             date: getKstDateKey(),
             version: DAILY_TEMPERATURE_READING_VERSION,
@@ -1037,11 +1043,15 @@ export function ReadingResultView(props: ReadingResultViewProps) {
             readingResult: fallbackReading
           }));
         }
+
+        setFreeError(null);
+        setResult(fallbackReading);
+        completedKeyRef.current = fetchKey;
+        return;
       }
 
-      setFreeError(null);
-      setResult(fallbackReading);
-      completedKeyRef.current = fetchKey;
+      setResult(null);
+      setFreeError(getStandardReadingErrorCode(err));
 
     } finally {
       if (inFlightKeyRef.current === fetchKey) {
@@ -1317,11 +1327,36 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   }
 
   const isDailyTemperature = props.menuId === 'daily-temperature';
-  const activeResult = result || (
-    isDailyTemperature
-      ? generateDailyTemperatureReading(props.cards[0])
-      : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle)
-  );
+  if (!result && !isDailyTemperature) {
+    const errorDetail = ERROR_DETAILS[freeError || 'AI_RESPONSE_INVALID'] || ERROR_DETAILS.AI_RESPONSE_INVALID;
+    return (
+      <div className="flex-grow flex flex-col items-center justify-center px-8 py-20 text-center bg-[#FAF9F5]">
+        <AlertTriangle className="w-12 h-12 text-[#BD6B65] mb-5" />
+        <h3 className="font-serif text-[18px] font-bold text-[#3C2F2F]">
+          {errorDetail.title}
+        </h3>
+        <p className="mt-3 text-[14px] leading-relaxed text-[#8A7A71] break-keep">
+          {errorDetail.description}
+        </p>
+        <button
+          type="button"
+          onClick={() => void fetchReading(true)}
+          className="mt-7 min-h-[48px] w-full max-w-[320px] rounded-[14px] bg-[#BD6B65] text-[14px] font-serif font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
+        >
+          다시 시도하기
+        </button>
+        <button
+          type="button"
+          onClick={props.onBackToHome}
+          className="mt-3 text-[13px] font-serif font-bold text-[#8A7A71]"
+        >
+          홈으로
+        </button>
+      </div>
+    );
+  }
+
+  const activeResult = result || generateDailyTemperatureReading(props.cards[0]);
   const finalTemp = activeResult.temperature ?? 45;
   const displayMenuTitle = activeResult.questionCategory || props.menuTitle;
   const dailyTemperatureMeaning = (activeResult.card1Meaning || activeResult.totalFlow || activeResult.oneLineConclusion || '')
