@@ -21,6 +21,6 @@ export const ADDITIONAL_QUESTION_PRICE_TEXT = '990원';
 
 export const QUESTION_PASS_PACKAGES = [
   { count: 1, price: 990, priceText: '990원', label: '추가 질문 1회' },
-  { count: 3, price: 2500, priceText: '2,500원', label: '추가 질문 3회' },
-  { count: 10, price: 6900, priceText: '6,900원', label: '추가 질문 10회' }
+  { count: 3, price: 2530, priceText: '2,530원', label: '추가 질문 3회' },
+  { count: 10, price: 6930, priceText: '6,930원', label: '추가 질문 10회' }
 ] as const;
