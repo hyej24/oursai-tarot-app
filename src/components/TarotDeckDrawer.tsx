@@ -143,8 +143,8 @@ export function TarotDeckDrawer(props: TarotDeckDrawerProps) {
     }
     if (selectedCards.length >= targetCardCount) return;
 
-    // 50% chance for Reversed orientation
-    const isReversed = Math.random() < 0.5;
+    // 오늘의 온도 리딩은 카드 의미가 흔들리지 않도록 역방향을 쓰지 않는다.
+    const isReversed = props.menuId === 'daily-temperature' ? false : Math.random() < 0.5;
     const cardWithReversedState: TarotCard = {
       ...card,
       isReversed
