@@ -1299,6 +1299,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
   const [showInlinePassPrompt, setShowInlinePassPrompt] = useState(false);
   const [pendingFollowUpQuestion, setPendingFollowUpQuestion] = useState<string>('');
+  const [adFollowUpLoading, setAdFollowUpLoading] = useState(false);
   const [appShareMessage, setAppShareMessage] = useState('오늘 우리 사이 온도 봤어 🔮\n너도 한 번 확인해봐!');
 
   // States to animate cards and save records
@@ -1768,7 +1769,10 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       return;
     }
 
+    if (adFollowUpLoading) return;
+    setAdFollowUpLoading(true);
     const granted = await props.onUseAdReadingAccess();
+    setAdFollowUpLoading(false);
     if (!granted) return;
 
     setShowInlinePassPrompt(false);
@@ -2044,10 +2048,11 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                 </div>
                 <button
                   type="button"
+                  disabled={adFollowUpLoading}
                   onClick={handleAdFollowUpClick}
-                  className="mt-4 min-h-[48px] w-full rounded-[14px] bg-[#BD6B65] text-[14px] font-serif font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)]"
+                  className="mt-4 min-h-[48px] w-full rounded-[14px] bg-[#BD6B65] text-[14px] font-serif font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)] disabled:opacity-70"
                 >
-                  광고 보고 이어서 보기
+                  {adFollowUpLoading ? '광고 여는 중...' : '광고 보고 이어서 보기'}
                 </button>
                 <button
                   type="button"
