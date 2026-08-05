@@ -20,7 +20,25 @@ export const ADDITIONAL_QUESTION_PRICE = 990;
 export const ADDITIONAL_QUESTION_PRICE_TEXT = '990원';
 
 export const QUESTION_PASS_PACKAGES = [
-  { count: 1, price: 990, priceText: '990원', label: '추가 질문 1회' },
-  { count: 3, price: 2530, priceText: '2,530원', label: '추가 질문 3회' },
-  { count: 10, price: 6930, priceText: '6,930원', label: '추가 질문 10회' }
+  {
+    count: 1,
+    price: 990,
+    priceText: '990원',
+    label: '추가 질문 1회',
+    sku: 'ait.0000045729.3b8f62cd.0b5e78d19f.5912017556'
+  },
+  {
+    count: 3,
+    price: 2530,
+    priceText: '2,530원',
+    label: '추가 질문 3회',
+    sku: 'ait.0000045729.076476c6.8f2beb4284.5912105801'
+  },
+  {
+    count: 10,
+    price: 6930,
+    priceText: '6,930원',
+    label: '추가 질문 10회',
+    sku: 'ait.0000045729.3b98398a.fa0a908acc.5912145104'
+  }
 ] as const;

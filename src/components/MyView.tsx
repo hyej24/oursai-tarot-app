@@ -10,22 +10,20 @@ interface MyViewProps {
   gyeolTokenBalance: number;
   dailyFreeAvailable: boolean;
   onShareAppReward: () => Promise<boolean | null>;
+  onPurchaseQuestionPass: (count: number) => Promise<boolean>;
 }
 
 export function MyView({
   gyeolTokenBalance,
   dailyFreeAvailable,
-  onShareAppReward
+  onShareAppReward,
+  onPurchaseQuestionPass
 }: MyViewProps) {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   const showFeedback = (message: string) => {
     setFeedbackMessage(message);
     setTimeout(() => setFeedbackMessage(null), 2500);
-  };
-
-  const showPaymentPendingMessage = () => {
-    showFeedback('결제 기능은 지금 준비 중이에요.');
   };
 
   const claimShareReward = async () => {
@@ -40,6 +38,13 @@ export function MyView({
         ? `앱 공유 보상으로 질문권 ${SHARE_READING_PASS_REWARD}개가 지급됐어요.`
         : '오늘 앱 공유 보상은 이미 받았어요.'
     );
+  };
+
+  const purchaseQuestionPass = async (count: number, label: string) => {
+    const purchased = await onPurchaseQuestionPass(count);
+    if (purchased) {
+      showFeedback(`${label}이 충전됐어요.`);
+    }
   };
 
   return (
@@ -100,8 +105,10 @@ export function MyView({
             <button
               key={pkg.count}
               type="button"
-              onClick={showPaymentPendingMessage}
-              className="w-full min-h-[39px] rounded-xl bg-[#F3EFE6] border border-[#EAE3D2] text-[#A69785] text-[13.5px] font-serif font-bold"
+              onClick={() => {
+                void purchaseQuestionPass(pkg.count, pkg.label);
+              }}
+              className="w-full min-h-[39px] rounded-xl bg-[#F3EFE6] border border-[#EAE3D2] text-[#7A5C52] text-[13.5px] font-serif font-bold"
             >
               {pkg.label} · {pkg.priceText}
             </button>

@@ -330,8 +330,87 @@ export default function App() {
     setActiveTab('home');
   };
 
-  const grantPaidReadingPass = (count = 1) => {
-    alert('결제 기능은 지금 준비 중이에요. 지금은 공유하거나 질문권을 충전해 주세요.');
+  const grantPaidReadingPass = async (count = 1) => {
+    const questionPackage = QUESTION_PASS_PACKAGES.find((pkg) => pkg.count === count) ?? QUESTION_PASS_PACKAGES[0];
+
+    try {
+      const framework = await import('@apps-in-toss/web-framework');
+      const iap = (framework as any).IAP;
+
+      if (!iap?.createOneTimePurchaseOrder) {
+        throw new Error('IAP_NOT_AVAILABLE');
+      }
+
+      let cleanup: (() => void) | undefined;
+      let settled = false;
+      let granted = false;
+
+      const grantOnce = () => {
+        if (granted) {
+          return;
+        }
+        granted = true;
+        addGyeolTokens(questionPackage.count);
+      };
+
+      const finish = (success: boolean) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup?.();
+        if (!success) {
+          alert('결제가 완료되지 않았어요. 다시 시도해 주세요.');
+        }
+      };
+
+      const success = await new Promise<boolean>((resolve) => {
+        const complete = (isSuccess: boolean) => {
+          finish(isSuccess);
+          resolve(isSuccess);
+        };
+
+        cleanup = iap.createOneTimePurchaseOrder({
+          options: {
+            sku: questionPackage.sku,
+            processProductGrant: async ({ orderId }: { orderId: string }) => {
+              console.log('IAP product grant completed', {
+                orderId,
+                sku: questionPackage.sku,
+                count: questionPackage.count
+              });
+              grantOnce();
+              window.setTimeout(() => complete(true), 0);
+              return true;
+            }
+          },
+          onEvent: (event: any) => {
+            const eventType = String(event?.type ?? '').toLowerCase();
+            console.log('IAP event', event);
+
+            if (eventType === 'success' || eventType.includes('complete')) {
+              grantOnce();
+              complete(true);
+              return;
+            }
+
+            if (eventType.includes('cancel') || eventType.includes('fail')) {
+              complete(false);
+            }
+          },
+          onError: (error: unknown) => {
+            console.error('IAP purchase error', error);
+            complete(false);
+          }
+        });
+      });
+
+      return success;
+    } catch (error) {
+      console.error('IAP unavailable', error);
+      alert('토스 앱 안에서만 결제를 진행할 수 있어요. 앱인토스 테스트 환경에서 다시 시도해 주세요.');
+      return false;
+    }
   };
 
   const grantShareReadingPass = () => {
@@ -534,7 +613,9 @@ export default function App() {
                   onSubmitQuestion={handleSubmitQuestion}
                   gyeolTokenBalance={gyeolTokenBalance}
                   dailyFreeAvailable={!firstFreeReadingUsed}
-                  onPaidQuestion={() => grantPaidReadingPass()}
+                  onPaidQuestion={() => {
+                    void grantPaidReadingPass();
+                  }}
                 />
               )}
               
@@ -550,6 +631,7 @@ export default function App() {
                   gyeolTokenBalance={gyeolTokenBalance}
                   dailyFreeAvailable={!firstFreeReadingUsed}
                   onShareAppReward={shareAppAndGrantReadingPass}
+                  onPurchaseQuestionPass={grantPaidReadingPass}
                 />
               )}
             </div>
@@ -992,7 +1074,9 @@ export default function App() {
                 onGoToRecords={handleGoToRecordsTab}
                 onAskFollowUp={handlePaidFollowUpQuestion}
                 onReadingSuccess={consumeReadingPassAfterSuccess}
-                onChargeQuestionPass={() => grantPaidReadingPass(1)}
+                onChargeQuestionPass={() => {
+                  void grantPaidReadingPass(1);
+                }}
                 onShareReward={grantShareReadingPass}
                 questionPassBalance={gyeolTokenBalance}
                 initialReadingResult={sharedReadingResult}
@@ -1035,21 +1119,31 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => grantPaidReadingPass(1)}
+                  onClick={async () => {
+                    const purchased = await grantPaidReadingPass(1);
+                    if (purchased) {
+                      continuePendingQuestion();
+                    }
+                  }}
                   className="w-full py-3 rounded-xl bg-[#F3EFE6] border border-[#E6A19C] text-[#BD6B65] text-[14px] font-serif font-bold"
                 >
-                  {ADDITIONAL_QUESTION_PRICE_TEXT} 결제 준비 중
+                  {ADDITIONAL_QUESTION_PRICE_TEXT} 결제하기
                 </button>
                 <div className="grid grid-cols-2 gap-2">
                   {QUESTION_PASS_PACKAGES.slice(1).map((pkg) => (
                     <button
                       key={pkg.count}
                       type="button"
-                      onClick={() => grantPaidReadingPass(pkg.count)}
+                      onClick={async () => {
+                        const purchased = await grantPaidReadingPass(pkg.count);
+                        if (purchased) {
+                          continuePendingQuestion();
+                        }
+                      }}
                       className="min-h-[44px] rounded-xl bg-white border border-[#EAE3D2] text-[#7A5C52] text-[12.5px] font-serif font-bold leading-snug"
                     >
                       {pkg.label}<br />
-                      <span className="text-[#BD6B65]">{pkg.priceText} · 준비 중</span>
+                      <span className="text-[#BD6B65]">{pkg.priceText}</span>
                     </button>
                   ))}
                 </div>
