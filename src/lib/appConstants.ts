@@ -9,7 +9,7 @@ export const FIRST_FREE_READING_USED_KEY = 'tarot_first_free_reading_used';
 export const DAILY_AD_REWARD_DATE_KEY = 'tarot_daily_ad_reward_date';
 export const DAILY_SHARE_REWARD_DATE_KEY = 'tarot_daily_share_reward_date_launch_v1';
 export const DAILY_TEMPERATURE_READING_KEY = 'tarot_daily_temperature_reading';
-export const DAILY_TEMPERATURE_READING_VERSION = 'daily-temperature-reading-v17-deck-upright-only';
+export const DAILY_TEMPERATURE_READING_VERSION = 'daily-temperature-reading-v18-remove-standard-total-flow';
 export const SHARE_REWARD_MODULE_ID = '80fa9e5f-afac-4e81-813c-ff30feac76a5';
 export const REWARDED_AD_GROUP_ID = 'ait.v2.live.437f612be4b64bef';
 

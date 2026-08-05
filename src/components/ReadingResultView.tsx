@@ -1982,23 +1982,11 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         </div>
       )}
 
-      {/* #4. 전체 흐름 */}
-      {!isDailyTemperature && activeResult.totalFlow && (
-        <div className="p-5 rounded-2xl bg-[#F3EFE6]/30 border border-[#EAE3D2] border-dashed mb-6">
-          <h4 className="font-serif text-[15px] font-bold text-[#3C2F2F] tracking-wide uppercase mb-2 flex items-center gap-1.5">
-            <span>5. 지금 흐름을 정리하면</span>
-          </h4>
-          <p className="text-[15.5px] text-[#5C4F4F] leading-relaxed font-sans block break-keep whitespace-pre-line">
-            {activeResult.totalFlow}
-          </p>
-        </div>
-      )}
-
       {/* #5. 지금 주의할 점 */}
       {!isDailyTemperature && activeResult.caution && (
         <div className="p-4 rounded-xl bg-[#FADBD8]/25 border border-[#F2D1CD] mb-6 space-y-1">
           <span className="text-[15px] font-bold text-[#C0392B] font-serif flex items-center gap-1">
-            6. 지금 주의할 점
+            5. 지금 주의할 점
           </span>
           <p className="text-[15.5px] text-[#5C4F4F] leading-relaxed font-sans break-keep whitespace-pre-line">
             {activeResult.caution}
@@ -2008,7 +1996,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
       {/* #6. 지금 필요한 핵심 조언 */}
       {!isDailyTemperature && activeResult.actionAdvice && (() => {
-        let adviceTitle = "7. 지금 필요한 조언";
+        let adviceTitle = "6. 지금 필요한 조언";
         if (!props.menuId.startsWith('question-')) {
           if (props.menuId === 'dating-luck') adviceTitle = "오늘의 연애 조언";
           else if (props.menuId === 'inner-mind') adviceTitle = "지금 필요한 조언";
