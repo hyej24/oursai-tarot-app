@@ -15,7 +15,6 @@ import { classifyQuestion } from './lib/questionTarot';
 import { TAROT_DECK } from './data/tarotCards';
 import {
   ADDITIONAL_QUESTION_PRICE_TEXT,
-  BONUS_READING_COUNT_KEY,
   DAILY_AD_REWARD_DATE_KEY,
   DAILY_FREE_READING_KEY,
   DAILY_SHARE_REWARD_DATE_KEY,
@@ -78,10 +77,7 @@ export default function App() {
 
   const refreshReadingAccess = () => {
     if (localStorage.getItem(GYEOL_TOKEN_MIGRATION_KEY) !== 'done') {
-      const legacyBonus = Number(localStorage.getItem(BONUS_READING_COUNT_KEY) || '0');
-      const existingTokens = Number(localStorage.getItem(GYEOL_TOKEN_BALANCE_KEY) || '0');
-      const migratedTokens = existingTokens + legacyBonus * READING_TOKEN_COST;
-      localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, String(migratedTokens));
+      localStorage.setItem(GYEOL_TOKEN_BALANCE_KEY, localStorage.getItem(GYEOL_TOKEN_BALANCE_KEY) || '0');
       localStorage.setItem(GYEOL_TOKEN_MIGRATION_KEY, 'done');
     }
 

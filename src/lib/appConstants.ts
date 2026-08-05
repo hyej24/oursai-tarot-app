@@ -1,15 +1,15 @@
-export const DAILY_FREE_READING_KEY = 'tarot_daily_free_reading_date';
+export const DAILY_FREE_READING_KEY = 'tarot_daily_free_reading_date_launch_v1';
 export const BONUS_READING_COUNT_KEY = 'tarot_bonus_reading_count';
 export const ATTENDANCE_COUNT_KEY = 'tarot_attendance_count';
 export const ATTENDANCE_LAST_DATE_KEY = 'tarot_last_attendance_date';
-export const GYEOL_TOKEN_BALANCE_KEY = 'tarot_gyeol_token_balance';
+export const GYEOL_TOKEN_BALANCE_KEY = 'tarot_gyeol_token_balance_launch_v1';
 export const GYEOL_TOKEN_DAILY_CLAIM_KEY = 'tarot_gyeol_token_daily_claim_date';
-export const GYEOL_TOKEN_MIGRATION_KEY = 'tarot_gyeol_token_migration_v1';
+export const GYEOL_TOKEN_MIGRATION_KEY = 'tarot_gyeol_token_migration_launch_v1';
 export const FIRST_FREE_READING_USED_KEY = 'tarot_first_free_reading_used';
 export const DAILY_AD_REWARD_DATE_KEY = 'tarot_daily_ad_reward_date';
-export const DAILY_SHARE_REWARD_DATE_KEY = 'tarot_daily_share_reward_date';
+export const DAILY_SHARE_REWARD_DATE_KEY = 'tarot_daily_share_reward_date_launch_v1';
 export const DAILY_TEMPERATURE_READING_KEY = 'tarot_daily_temperature_reading';
-export const DAILY_TEMPERATURE_READING_VERSION = 'daily-temperature-reading-v5-local-card-specific';
+export const DAILY_TEMPERATURE_READING_VERSION = 'daily-temperature-reading-v6-clean-launch';
 export const SHARE_REWARD_MODULE_ID = '80fa9e5f-afac-4e81-813c-ff30feac76a5';
 
 export const READING_TOKEN_COST = 1;
