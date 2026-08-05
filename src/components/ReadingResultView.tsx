@@ -92,6 +92,135 @@ const readingResultCache = new Map<string, StandardReadingResult>();
 const readingRequestCache = new Map<string, Promise<StandardReadingResult>>();
 const chargedReadingKeys = new Set<string>();
 const isFreeTemperatureMenu = (menuId: string) => menuId === 'daily-temperature' || menuId === 'relation-temp';
+const READING_CACHE_PREFIX = 'tarot_success_reading_cache_';
+const READING_LOCK_PREFIX = 'tarot_inflight_reading_lock_';
+const CHARGED_READING_KEYS_PREFIX = 'tarot_charged_reading_keys_';
+const READING_LOCK_TTL_MS = 25000;
+
+function hashReadingKey(value: string) {
+  let hash = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) + hash) ^ value.charCodeAt(index);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function getReadingCacheKey(fetchKey: string) {
+  return `${READING_CACHE_PREFIX}${hashReadingKey(fetchKey)}`;
+}
+
+function getReadingLockKey(fetchKey: string) {
+  return `${READING_LOCK_PREFIX}${hashReadingKey(fetchKey)}`;
+}
+
+function readPersistentReading(fetchKey: string): StandardReadingResult | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(getReadingCacheKey(fetchKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.fetchKeyHash !== hashReadingKey(fetchKey)) return null;
+    const normalized = normalizeApiReading(parsed?.readingResult || parsed?.reading || parsed);
+    return hasUsableReading(normalized, parsed?.menuId || '') ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistentReading(fetchKey: string, menuId: string, readingResult: StandardReadingResult) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(getReadingCacheKey(fetchKey), JSON.stringify({
+      fetchKeyHash: hashReadingKey(fetchKey),
+      menuId,
+      savedAt: Date.now(),
+      readingResult
+    }));
+  } catch {
+    // Storage can fail in private/embedded browsers. Memory cache still protects current session.
+  }
+}
+
+function readActiveReadingLock(fetchKey: string): { requestId: string; expiresAt: number } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(getReadingLockKey(fetchKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.requestId || Number(parsed?.expiresAt) <= Date.now()) {
+      localStorage.removeItem(getReadingLockKey(fetchKey));
+      return null;
+    }
+    return { requestId: String(parsed.requestId), expiresAt: Number(parsed.expiresAt) };
+  } catch {
+    return null;
+  }
+}
+
+function writeReadingLock(fetchKey: string, requestId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(getReadingLockKey(fetchKey), JSON.stringify({
+      requestId,
+      startedAt: Date.now(),
+      expiresAt: Date.now() + READING_LOCK_TTL_MS
+    }));
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function clearReadingLock(fetchKey: string, requestId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const active = readActiveReadingLock(fetchKey);
+    if (!active || active.requestId === requestId) {
+      localStorage.removeItem(getReadingLockKey(fetchKey));
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+async function waitForPersistedReading(fetchKey: string, lock: { requestId: string; expiresAt: number }) {
+  const endAt = Math.min(lock.expiresAt, Date.now() + 8000);
+  while (Date.now() < endAt) {
+    const stored = readPersistentReading(fetchKey);
+    if (stored) return stored;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  return null;
+}
+
+function getDailyChargedSetKey() {
+  return `${CHARGED_READING_KEYS_PREFIX}${getKstDateKey()}`;
+}
+
+function hasPersistentlyChargedReading(fetchKey: string) {
+  if (typeof window === 'undefined') return false;
+  try {
+    const charged = JSON.parse(localStorage.getItem(getDailyChargedSetKey()) || '[]');
+    return Array.isArray(charged) && charged.includes(hashReadingKey(fetchKey));
+  } catch {
+    return false;
+  }
+}
+
+function markPersistentlyChargedReading(fetchKey: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const key = getDailyChargedSetKey();
+    const charged = JSON.parse(localStorage.getItem(key) || '[]');
+    const next = Array.isArray(charged) ? charged : [];
+    const hash = hashReadingKey(fetchKey);
+    if (!next.includes(hash)) {
+      next.push(hash);
+      localStorage.setItem(key, JSON.stringify(next.slice(-80)));
+    }
+  } catch {
+    // Ignore storage failures.
+  }
+}
 
 function replaceHanjaInKoreanText(text: string): string {
   const hanjaMap: Record<string, string> = {
@@ -249,13 +378,17 @@ async function postTarotReadingWithFallback(payload: Record<string, unknown>) {
   const primaryUrl = apiPath('/api/tarot/read');
   const urls = [primaryUrl];
   let lastError: Error | null = null;
+  const clientRequestId = String(payload.requestId || `reading-${Date.now().toString(36)}`);
 
   for (const url of urls) {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-Request-Id': clientRequestId
+        },
+        body: JSON.stringify({ ...payload, requestId: clientRequestId }),
       });
 
       const resJson = await response.json().catch(() => null);
@@ -549,6 +682,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       cards: props.cards.map(card => ({ id: card.id, isReversed: card.isReversed })),
       partnerId: props.partnerProfile?.id || '',
     });
+    const requestId = `reading-${Date.now().toString(36)}-${hashReadingKey(fetchKey)}`;
 
     if (!isRetry && (inFlightKeyRef.current === fetchKey || completedKeyRef.current === fetchKey)) {
       return;
@@ -573,6 +707,33 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       setLoading(true);
       setFreeError(null);
 
+      const persistentCachedResult = !isRetry ? readPersistentReading(fetchKey) : null;
+      if (persistentCachedResult) {
+        readingResultCache.set(fetchKey, persistentCachedResult);
+        setResult(persistentCachedResult);
+        completedKeyRef.current = fetchKey;
+        return;
+      }
+
+      const activeLock = !isRetry ? readActiveReadingLock(fetchKey) : null;
+      if (activeLock) {
+        console.warn(`[READING_DUPLICATE_BLOCKED] ${requestId} skipped because ${activeLock.requestId} is still running for the same cards/question.`);
+        const waitedResult = await waitForPersistedReading(fetchKey, activeLock);
+        if (waitedResult) {
+          readingResultCache.set(fetchKey, waitedResult);
+          setResult(waitedResult);
+          completedKeyRef.current = fetchKey;
+          return;
+        }
+        const duplicateFallback = props.menuId === 'daily-temperature'
+          ? generateDailyTemperatureReading(props.cards[0])
+          : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle);
+        readingResultCache.set(fetchKey, duplicateFallback);
+        setResult(duplicateFallback);
+        completedKeyRef.current = fetchKey;
+        return;
+      }
+
       const cachedResult = !isRetry ? readingResultCache.get(fetchKey) : undefined;
       if (cachedResult) {
         setResult(cachedResult);
@@ -591,6 +752,9 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       }
 
       const existingRequest = !isRetry ? readingRequestCache.get(fetchKey) : undefined;
+      if (!existingRequest) {
+        writeReadingLock(fetchKey, requestId);
+      }
       const requestPromise = existingRequest || (async () => {
         if (props.menuId === 'relation-temp') {
           return generateDailyTemperatureReading(props.cards[0]);
@@ -610,6 +774,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
             ? props.menuId.replace('question-', '')
             : props.menuTitle,
           spreadRoles: getSpreadRoles(props.menuId),
+          requestId,
         });
       })().catch((error) => {
         console.warn('AI reading failed, local fallback is disabled:', error);
@@ -622,6 +787,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
 
       const readingData = await requestPromise;
       readingResultCache.set(fetchKey, readingData);
+      writePersistentReading(fetchKey, props.menuId, readingData);
 
       if (readingData) {
         if (props.menuId === 'daily-temperature' && props.cards[0] && typeof window !== 'undefined') {
@@ -657,6 +823,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         : generateSafeFallbackReading(props.cards, props.question || props.situation || '', props.menuTitle);
 
       readingResultCache.set(fetchKey, fallbackReading);
+      writePersistentReading(fetchKey, props.menuId, fallbackReading);
 
       if (props.menuId === 'daily-temperature' && props.cards[0] && typeof window !== 'undefined') {
         const temperature = Number(fallbackReading.temperature);
@@ -683,6 +850,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       if (readingRequestCache.get(fetchKey)) {
         readingRequestCache.delete(fetchKey);
       }
+      clearReadingLock(fetchKey, requestId);
       const remainingLoadingMs = minimumLoadingMs - (Date.now() - loadingStartedAt);
       if (remainingLoadingMs > 0) {
         await new Promise(resolve => setTimeout(resolve, remainingLoadingMs));
@@ -718,6 +886,13 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       return;
     }
 
+    if (hasPersistentlyChargedReading(chargedKey)) {
+      chargedReadingKeys.add(chargedKey);
+      hasChargedAccessRef.current = true;
+      setHasChargedAccess(true);
+      return;
+    }
+
     const chargeAfterSuccessfulPaint = window.setTimeout(() => {
       if (freeError || !result || completedKeyRef.current !== chargedKey || chargedReadingKeys.has(chargedKey)) {
         return;
@@ -729,6 +904,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
       }
 
       chargedReadingKeys.add(chargedKey);
+      markPersistentlyChargedReading(chargedKey);
       hasChargedAccessRef.current = true;
       setHasChargedAccess(true);
     }, 0);

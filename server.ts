@@ -1705,7 +1705,7 @@ app.get("/api/health", (req, res) => {
     useResponseSchema: GEMINI_USE_RESPONSE_SCHEMA,
     useJsonMime: GEMINI_USE_JSON_MIME,
     thinkingBudget: GEMINI_THINKING_BUDGET,
-    version: "release-candidate-share-daily-20260805-1"
+    version: "cost-guard-request-lock-20260805-1"
   });
 });
 
@@ -1726,8 +1726,15 @@ app.post("/api/tarot/read", async (req, res) => {
       question,
       questionCategory,
       spreadRoles,
+      requestId,
       mockErrorType
     } = req.body;
+    const clientRequestId = String(
+      req.headers["x-client-request-id"] ||
+      requestId ||
+      `server-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+    );
+    console.log(`[READING_REQUEST_START] ${clientRequestId} menu=${menuId || ""} category=${questionCategory || menuTitle || ""} cards=${Array.isArray(cards) ? cards.map((card: any) => `${card?.id}${card?.isReversed ? "R" : "U"}`).join(",") : "invalid"}`);
     const isOpenQuestion = menuId?.startsWith("question-");
     const isDailyTemperature = menuId === "daily-temperature";
     const rawQuestion = question || situation || "";
@@ -1946,7 +1953,7 @@ followUpQuestions는 온도 리딩 뒤에 이어서 보고 싶은 자연스러�
       };
 
       recoverableReading = parsedResult;
-      return res.json({ success: true, method: "gemini", data: parsedResult });
+      return res.json({ success: true, method: "gemini", requestId: clientRequestId, data: parsedResult });
     }
 
     const systemInstruction =
@@ -2429,7 +2436,7 @@ JSON 양식을 정확히 출력해 주세요.`;
       parsedResult.questionCategory = inferredCategory;
     }
     recoverableReading = parsedResult;
-    return res.json({ success: true, method: "gemini", data: parsedResult });
+    return res.json({ success: true, method: "gemini", requestId: clientRequestId, data: parsedResult });
 
   } catch (error: any) {
     const elapsed = Date.now() - startTime;
