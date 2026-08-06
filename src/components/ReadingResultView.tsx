@@ -1300,6 +1300,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   const [showInlinePassPrompt, setShowInlinePassPrompt] = useState(false);
   const [pendingFollowUpQuestion, setPendingFollowUpQuestion] = useState<string>('');
   const [adFollowUpLoading, setAdFollowUpLoading] = useState(false);
+  const [adFollowUpMessage, setAdFollowUpMessage] = useState('');
   const [appShareMessage, setAppShareMessage] = useState('오늘 우리 사이 온도 봤어 🔮\n너도 한 번 확인해봐!');
 
   // States to animate cards and save records
@@ -1770,11 +1771,16 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     }
 
     if (adFollowUpLoading) return;
+    setAdFollowUpMessage('광고를 여는 중이에요.');
     setAdFollowUpLoading(true);
     const granted = await props.onUseAdReadingAccess();
     setAdFollowUpLoading(false);
-    if (!granted) return;
+    if (!granted) {
+      setAdFollowUpMessage('광고를 열지 못했어요. 토스 앱 최신 버전에서 다시 시도해 주세요.');
+      return;
+    }
 
+    setAdFollowUpMessage('');
     setShowInlinePassPrompt(false);
     props.onAskFollowUp?.(pendingFollowUpQuestion);
   };
@@ -2054,6 +2060,11 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                 >
                   {adFollowUpLoading ? '광고 여는 중...' : '광고 보고 이어서 보기'}
                 </button>
+                {adFollowUpMessage && (
+                  <p className="mt-2 rounded-xl bg-white/70 px-3 py-2 text-center text-[12px] leading-relaxed text-[#8A7A71] break-keep">
+                    {adFollowUpMessage}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={props.onChargeQuestionPass}

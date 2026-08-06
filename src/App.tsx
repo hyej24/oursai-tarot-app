@@ -71,6 +71,8 @@ export default function App() {
   const [firstFreeReadingUsed, setFirstFreeReadingUsed] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState('');
   const [showReadingGate, setShowReadingGate] = useState(false);
+  const [adGateLoading, setAdGateLoading] = useState(false);
+  const [adGateMessage, setAdGateMessage] = useState('');
   const adReadingAccessPendingRef = useRef(false);
 
   const refreshReadingAccess = () => {
@@ -410,7 +412,9 @@ export default function App() {
 
   const showRewardedAdForReadingAccess = async () => {
     const today = getKstDateKey();
+    setAdGateMessage('');
     if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
+      setAdGateMessage('오늘 광고로 이어보기는 이미 사용했어요.');
       return false;
     }
 
@@ -423,6 +427,7 @@ export default function App() {
         throw new Error('REWARDED_AD_NOT_SUPPORTED');
       }
 
+      setAdGateMessage('광고를 불러오는 중이에요.');
       const loaded = await new Promise<boolean>((resolve) => {
         let cleanup: (() => void) | undefined;
         let settled = false;
@@ -451,10 +456,12 @@ export default function App() {
       });
 
       if (!loaded) {
+        setAdGateMessage('광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
         alert('광고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
         return false;
       }
 
+      setAdGateMessage('광고 창을 여는 중이에요.');
       const rewarded = await new Promise<boolean>((resolve) => {
         let cleanup: (() => void) | undefined;
         let settled = false;
@@ -496,15 +503,18 @@ export default function App() {
       });
 
       if (!rewarded) {
+        setAdGateMessage('광고 시청이 완료되지 않았어요.');
         alert('광고 시청이 완료되지 않았어요.');
         return false;
       }
 
       localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
       adReadingAccessPendingRef.current = true;
+      setAdGateMessage('광고 확인이 완료됐어요. 이어서 리딩을 볼게요.');
       return true;
     } catch (error) {
       console.error('Rewarded ad unavailable', error);
+      setAdGateMessage('지금 환경에서는 광고를 열 수 없어요. 토스 앱 최신 버전에서 다시 시도해 주세요.');
       alert('토스 앱에서 광고를 볼 수 있을 때 사용할 수 있어요.');
       return false;
     }
@@ -1176,16 +1186,28 @@ export default function App() {
               <div className="mt-4 space-y-2">
                 <button
                   type="button"
+                  disabled={adGateLoading}
                   onClick={async () => {
-                    const granted = await showRewardedAdForReadingAccess();
-                    if (!granted) return;
-                    continuePendingQuestion();
+                    if (adGateLoading) return;
+                    setAdGateLoading(true);
+                    try {
+                      const granted = await showRewardedAdForReadingAccess();
+                      if (!granted) return;
+                      continuePendingQuestion();
+                    } finally {
+                      setAdGateLoading(false);
+                    }
                   }}
-                  className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold shadow-[0_10px_20px_rgba(189,107,101,0.18)]"
+                  className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold shadow-[0_10px_20px_rgba(189,107,101,0.18)] disabled:opacity-70"
                 >
-                  광고 보고 이어서 보기
+                  {adGateLoading ? '광고 여는 중...' : '광고 보고 이어서 보기'}
                   <span className="ml-1 text-[11px] font-normal text-white/80">1일 1회</span>
                 </button>
+                {adGateMessage && (
+                  <p className="rounded-xl bg-white/70 px-3 py-2 text-[12px] leading-relaxed text-[#8A7A71] break-keep">
+                    {adGateMessage}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={async () => {
