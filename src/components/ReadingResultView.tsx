@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Save, ArrowLeft, HelpCircle, ArrowRight, ShieldCheck, Check, AlertTriangle, RefreshCcw, Sparkles } from 'lucide-react';
+import { Heart, Save, ArrowLeft, HelpCircle, ArrowRight, ShieldCheck, Check, AlertTriangle, RefreshCcw, Sparkles, Share2 } from 'lucide-react';
 import { TarotCard, PartnerProfile, RelationshipType } from '../types';
 import { getProductByType, getSuggestedQuestions, SuggestedQuestion } from '../data/pricingProducts';
 import { calculateRelationshipTemperature } from '../data/tarotCards';
@@ -10,6 +10,7 @@ import { DAILY_TEMPERATURE_READING_KEY, DAILY_TEMPERATURE_READING_VERSION, READI
 import { generateLocalPaidReading } from '../lib/localTarotReading';
 import { apiPath } from '../lib/apiBase';
 import { getKstDateKey } from '../lib/kstDate';
+import { shareAppMessage } from '../lib/appShare';
 
 interface ReadingResultViewProps {
   menuId: string;
@@ -984,11 +985,16 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     8: -0.2, 9: -0.1, 10: 0.5, 11: 0.2, 12: 0.4, 13: 0.3, 14: 0.4,
   };
   const scoreShift = ((affection - 50) * 0.012) + ((contact - 50) * 0.006) + ((progress - 50) * 0.006) + ((stability - 50) * 0.006) - ((defense - 50) * 0.008);
-  const baseTemperature = selectedCard.type === 'major'
+  const cardTemperatureOverride: Record<number, number> = {
+    39: 35.9,
+    43: 35.4,
+    40: 35.5,
+  };
+  const baseTemperature = cardTemperatureOverride[cardId] ?? (selectedCard.type === 'major'
     ? majorTemperature[cardId] ?? 36.8
-    : (suitBase[suit] ?? 36.6) + (valueShift[value] ?? 0);
+    : (suitBase[suit] ?? 36.6) + (valueShift[value] ?? 0));
   const cardFineTune = (((cardId * 31) % 9) - 4) * 0.04;
-  const temperature = Number(Math.max(33.8, Math.min(40.1, baseTemperature + scoreShift + cardFineTune)).toFixed(1));
+  const temperature = Number(Math.max(33.8, Math.min(40.1, baseTemperature + (cardTemperatureOverride[cardId] ? scoreShift * 0.25 : scoreShift) + cardFineTune)).toFixed(1));
 
   const tempMood = temperature >= 38.4
     ? '따뜻함이 선명한 온도'
@@ -1056,7 +1062,7 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     1: { mood: '새로운 신호가 시작될 수 있어요.', person: '상대는 작은 계기에 반응할 준비가 되어 있을 수 있어요.', caution: '시작의 신호를 너무 큰 결론으로 키우지 마세요.', advice: '짧고 밝은 첫마디가 좋아요.' },
     2: { mood: '서로의 반응을 맞춰 보는 온도예요.', person: '상대는 질문자님의 태도를 보며 거리를 조절할 수 있어요.', caution: '상대가 고민하는 시간을 압박하지 마세요.', advice: '선택을 강요하기보다 가능성을 열어 주세요.' },
     3: { mood: '관계가 조금씩 밖으로 펼쳐지는 흐름이에요.', person: '상대는 이어질 가능성을 완전히 닫지 않고 볼 수 있어요.', caution: '기대가 커져도 조급하게 확인하지 마세요.', advice: '다음 대화로 이어질 여지를 남겨 보세요.' },
-    4: { mood: '편안함과 정체감이 함께 느껴질 수 있어요.', person: '상대는 안전한 거리 안에서 반응하려 할 수 있어요.', caution: '편안함을 무관심으로만 보지 마세요.', advice: '부담 없는 안정감을 먼저 만들어 주세요.' },
+    4: { mood: '감정이 살아나기보다 잠시 멈춰 있는 온도예요.', person: '상대는 호의가 있어도 바로 반응하기보다 자기 안에 머물 수 있어요.', caution: '무덤덤한 반응을 억지로 끌어내려 하면 더 닫힐 수 있어요.', advice: '큰 확인보다 짧고 가벼운 말로 분위기만 환기해 주세요.' },
     5: { mood: '서운함이나 부족함이 먼저 올라올 수 있어요.', person: '상대는 마음이 있어도 여유가 없어 낮게 반응할 수 있어요.', caution: '부족한 반응을 질문자님 가치와 연결하지 마세요.', advice: '무리해서 끌어올리기보다 마음을 먼저 보호하세요.' },
     6: { mood: '익숙함과 다정한 기억이 온도를 살려요.', person: '상대는 질문자님에게 편안함이나 아련한 호감을 느낄 수 있어요.', caution: '좋았던 분위기를 바로 확답으로 몰아가지 마세요.', advice: '편안했던 이야기나 가벼운 안부가 잘 맞아요.' },
     7: { mood: '겉으로 보이는 것보다 살피는 마음이 많아요.', person: '상대는 쉽게 속을 보이기보다 질문자님의 반응을 지켜볼 수 있어요.', caution: '애매한 신호를 확정적인 답으로 보지 마세요.', advice: '관찰하되 단정하지 않는 태도가 좋아요.' },
@@ -1302,6 +1308,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
   const [adFollowUpLoading, setAdFollowUpLoading] = useState(false);
   const [adFollowUpMessage, setAdFollowUpMessage] = useState('');
   const [appShareMessage, setAppShareMessage] = useState('오늘 우리 사이 온도 봤어 🔮\n너도 한 번 확인해봐!');
+  const [appShareLoading, setAppShareLoading] = useState(false);
 
   // States to animate cards and save records
   const [isSaved, setIsSaved] = useState<boolean>(false);
@@ -1754,6 +1761,25 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     setIsSaved(true);
   };
 
+  const handleShareAppFromResult = async () => {
+    if (appShareLoading) return;
+    setAppShareLoading(true);
+
+    const shareResult = await shareAppMessage({
+      title: '타로: 우리 사이 온도',
+      text: appShareMessage,
+      url: typeof window !== 'undefined' ? window.location.origin : undefined,
+    });
+
+    setAppShareLoading(false);
+
+    if (shareResult === 'copied') {
+      alert('공유 문구를 복사했어요.');
+    } else if (shareResult === 'failed') {
+      alert('지금 환경에서는 공유를 열 수 없어요. 토스 앱에서 다시 시도해 주세요.');
+    }
+  };
+
   const handleFollowUpClick = (followUp: string) => {
     if ((props.questionPassBalance ?? 0) < READING_TOKEN_COST) {
       setPendingFollowUpQuestion(followUp);
@@ -2049,7 +2075,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                 <div className="text-center">
                   <p className="font-serif text-[16px] font-bold text-[#3C2F2F]">질문권이 필요해요</p>
                   <p className="mt-2 text-[14px] leading-relaxed text-[#8A7A71] break-keep">
-                    광고를 보면 오늘 한 번, 질문권 없이 이어서 볼 수 있어요.
+                    광고를 보면 하루 한 번 질문권 1개가 지급돼요.
                   </p>
                 </div>
                 <button
@@ -2058,7 +2084,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
                   onClick={handleAdFollowUpClick}
                   className="mt-4 min-h-[48px] w-full rounded-[14px] bg-[#BD6B65] text-[14px] font-serif font-bold text-white shadow-[0_10px_18px_rgba(189,107,101,0.18)] disabled:opacity-70"
                 >
-                  {adFollowUpLoading ? '광고 여는 중...' : '광고 보고 이어서 보기'}
+                  {adFollowUpLoading ? '광고 여는 중...' : '광고 보고 질문권 1개 받기'}
                 </button>
                 {adFollowUpMessage && (
                   <p className="mt-2 rounded-xl bg-white/70 px-3 py-2 text-center text-[12px] leading-relaxed text-[#8A7A71] break-keep">
@@ -2144,6 +2170,15 @@ export function ReadingResultView(props: ReadingResultViewProps) {
         >
           <Save className="w-3.5 h-3.5" />
           <span>{isSaved ? "리딩 저장 완료!" : "8. 이 리딩 저장하기"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleShareAppFromResult}
+          disabled={appShareLoading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E6A19C] bg-[#FFFDFC] py-3.5 font-serif text-[15px] font-bold text-[#BD6B65] shadow-sm transition-colors hover:bg-[#FFF7F5] disabled:opacity-70 cursor-pointer"
+        >
+          <Share2 className="h-3.5 w-3.5" />
+          <span>{appShareLoading ? '공유 여는 중...' : '앱 공유하기'}</span>
         </button>
         <button
           type="button"
