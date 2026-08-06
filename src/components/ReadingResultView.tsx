@@ -10,7 +10,6 @@ import { DAILY_TEMPERATURE_READING_KEY, DAILY_TEMPERATURE_READING_VERSION, READI
 import { generateLocalPaidReading } from '../lib/localTarotReading';
 import { apiPath } from '../lib/apiBase';
 import { getKstDateKey } from '../lib/kstDate';
-import { shareAppMessage } from '../lib/appShare';
 
 interface ReadingResultViewProps {
   menuId: string;
@@ -25,6 +24,7 @@ interface ReadingResultViewProps {
   onReadingSuccess?: () => boolean | void;
   onChargeQuestionPass?: () => void;
   onUseAdReadingAccess?: () => Promise<boolean>;
+  onClaimShareRewardPass?: () => Promise<boolean>;
   questionPassBalance?: number;
   initialReadingResult?: StandardReadingResult | null;
 }
@@ -1765,18 +1765,14 @@ export function ReadingResultView(props: ReadingResultViewProps) {
     if (appShareLoading) return;
     setAppShareLoading(true);
 
-    const shareResult = await shareAppMessage({
-      title: '타로: 우리 사이 온도',
-      text: appShareMessage,
-      url: typeof window !== 'undefined' ? window.location.origin : undefined,
-    });
+    const rewarded = props.onClaimShareRewardPass
+      ? await props.onClaimShareRewardPass()
+      : false;
 
     setAppShareLoading(false);
 
-    if (shareResult === 'copied') {
-      alert('공유 문구를 복사했어요.');
-    } else if (shareResult === 'failed') {
-      alert('지금 환경에서는 공유를 열 수 없어요. 토스 앱에서 다시 시도해 주세요.');
+    if (rewarded) {
+      setAppShareMessage('앱 공유가 완료됐어요. 질문권 1개가 지급됐어요.');
     }
   };
 
@@ -2178,7 +2174,7 @@ export function ReadingResultView(props: ReadingResultViewProps) {
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E6A19C] bg-[#FFFDFC] py-3.5 font-serif text-[15px] font-bold text-[#BD6B65] shadow-sm transition-colors hover:bg-[#FFF7F5] disabled:opacity-70 cursor-pointer"
         >
           <Share2 className="h-3.5 w-3.5" />
-          <span>{appShareLoading ? '공유 여는 중...' : '앱 공유하기'}</span>
+          <span>{appShareLoading ? '공유 여는 중...' : '앱 공유하고 질문권 1개 받기'}</span>
         </button>
         <button
           type="button"
