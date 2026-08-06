@@ -17,16 +17,19 @@ import {
   ADDITIONAL_QUESTION_PRICE_TEXT,
   DAILY_AD_REWARD_DATE_KEY,
   DAILY_FREE_READING_KEY,
+  DAILY_SHARE_REWARD_DATE_KEY,
   DAILY_TEMPERATURE_READING_KEY,
   DAILY_TEMPERATURE_READING_VERSION,
   GYEOL_TOKEN_BALANCE_KEY,
   GYEOL_TOKEN_MIGRATION_KEY,
   QUESTION_PASS_PACKAGES,
   REWARDED_AD_GROUP_ID,
-  READING_TOKEN_COST
+  READING_TOKEN_COST,
+  SHARE_REWARD_MODULE_ID
 } from './lib/appConstants';
 import { getKstDateKey } from './lib/kstDate';
 import { decodeSharedReading, SHARED_READING_QUERY_KEY } from './lib/sharedReadingLink';
+import { openShareReward } from './lib/appShare';
 
 type ActiveTab = 'home' | 'records' | 'my';
 type FlowStep = 
@@ -414,7 +417,7 @@ export default function App() {
     const today = getKstDateKey();
     setAdGateMessage('');
     if (localStorage.getItem(DAILY_AD_REWARD_DATE_KEY) === today) {
-      setAdGateMessage('오늘 광고로 이어보기는 이미 사용했어요.');
+      setAdGateMessage('오늘 광고로 질문권 받기는 이미 사용했어요.');
       return false;
     }
 
@@ -509,8 +512,9 @@ export default function App() {
       }
 
       localStorage.setItem(DAILY_AD_REWARD_DATE_KEY, today);
-      adReadingAccessPendingRef.current = true;
-      setAdGateMessage('광고 확인이 완료됐어요. 이어서 리딩을 볼게요.');
+      addGyeolTokens(READING_TOKEN_COST);
+      adReadingAccessPendingRef.current = false;
+      setAdGateMessage('광고 확인이 완료됐어요. 질문권 1개가 지급됐어요.');
       return true;
     } catch (error) {
       console.error('Rewarded ad unavailable', error);
@@ -518,6 +522,33 @@ export default function App() {
       alert('토스 앱에서 광고를 볼 수 있을 때 사용할 수 있어요.');
       return false;
     }
+  };
+
+  const claimShareRewardPass = async () => {
+    const today = getKstDateKey();
+
+    if (localStorage.getItem(DAILY_SHARE_REWARD_DATE_KEY) === today) {
+      alert('앱 공유 질문권은 하루 한 번만 받을 수 있어요.');
+      return false;
+    }
+
+    const result = await openShareReward(SHARE_REWARD_MODULE_ID);
+
+    if (result !== 'rewarded') {
+      if (result === 'closed') {
+        alert('공유가 완료되면 질문권 1개를 받을 수 있어요.');
+      } else if (result === 'unsupported') {
+        alert('토스 앱에서 공유할 수 있을 때 사용할 수 있어요.');
+      } else {
+        alert('공유 리워드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+      }
+      return false;
+    }
+
+    localStorage.setItem(DAILY_SHARE_REWARD_DATE_KEY, today);
+    addGyeolTokens(READING_TOKEN_COST);
+    alert('앱 공유가 완료됐어요. 질문권 1개가 지급됐어요.');
+    return true;
   };
 
   const handlePaidFollowUpQuestion = (question: string) => {
@@ -718,6 +749,7 @@ export default function App() {
                   gyeolTokenBalance={gyeolTokenBalance}
                   dailyFreeAvailable={!firstFreeReadingUsed}
                   onPurchaseQuestionPass={grantPaidReadingPass}
+                  onClaimShareRewardPass={claimShareRewardPass}
                 />
               )}
             </div>
@@ -1181,7 +1213,7 @@ export default function App() {
                 질문권이 필요해요
               </h3>
               <p className="mt-2 text-[14px] leading-relaxed text-[#8A7A71] break-keep">
-                오늘 무료 질문은 이미 사용했어요. 광고를 보면 하루 한 번 더 리딩을 볼 수 있어요.
+                오늘 무료 질문은 이미 사용했어요. 광고를 보면 하루 한 번 질문권 1개가 지급돼요.
               </p>
               <div className="mt-4 space-y-2">
                 <button
@@ -1200,7 +1232,7 @@ export default function App() {
                   }}
                   className="w-full py-3 rounded-xl bg-[#BD6B65] text-white text-[14px] font-serif font-bold shadow-[0_10px_20px_rgba(189,107,101,0.18)] disabled:opacity-70"
                 >
-                  {adGateLoading ? '광고 여는 중...' : '광고 보고 이어서 보기'}
+                  {adGateLoading ? '광고 여는 중...' : '광고 보고 질문권 1개 받기'}
                   <span className="ml-1 text-[11px] font-normal text-white/80">1일 1회</span>
                 </button>
                 {adGateMessage && (

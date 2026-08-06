@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Gem } from 'lucide-react';
+import { Gem, Share2 } from 'lucide-react';
 import {
   QUESTION_PASS_PACKAGES,
   READING_TOKEN_COST
@@ -9,14 +9,17 @@ interface MyViewProps {
   gyeolTokenBalance: number;
   dailyFreeAvailable: boolean;
   onPurchaseQuestionPass: (count: number) => Promise<boolean>;
+  onClaimShareRewardPass: () => Promise<boolean>;
 }
 
 export function MyView({
   gyeolTokenBalance,
   dailyFreeAvailable,
-  onPurchaseQuestionPass
+  onPurchaseQuestionPass,
+  onClaimShareRewardPass
 }: MyViewProps) {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [shareRewardLoading, setShareRewardLoading] = useState(false);
 
   const showFeedback = (message: string) => {
     setFeedbackMessage(message);
@@ -27,6 +30,17 @@ export function MyView({
     const purchased = await onPurchaseQuestionPass(count);
     if (purchased) {
       showFeedback(`${label}이 충전됐어요.`);
+    }
+  };
+
+  const claimShareReward = async () => {
+    if (shareRewardLoading) return;
+    setShareRewardLoading(true);
+    const rewarded = await onClaimShareRewardPass();
+    setShareRewardLoading(false);
+
+    if (rewarded) {
+      showFeedback('앱 공유 질문권 1개가 지급됐어요.');
     }
   };
 
@@ -71,12 +85,23 @@ export function MyView({
         <p className="mt-2.5 text-[12.5px] text-[#8A7A71] leading-relaxed break-keep">
           기본 질문권은 매일 1개 충전되고 자정이 지나면 사라져요.
           <br />
-          광고를 보면 하루 1번 리딩을 이어서 볼 수 있어요.
+          광고를 보면 하루 1번 질문권 1개를 받을 수 있어요.
           <br />
           이후 추가 질문은 질문권 {READING_TOKEN_COST}개를 사용해요.
         </p>
 
         <div className="mt-2 grid grid-cols-1 gap-2">
+          <button
+            type="button"
+            disabled={shareRewardLoading}
+            onClick={() => {
+              void claimShareReward();
+            }}
+            className="w-full min-h-[42px] rounded-xl bg-white border border-[#E6A19C] text-[#BD6B65] text-[13.5px] font-serif font-bold flex items-center justify-center gap-1.5 disabled:opacity-70"
+          >
+            <Share2 className="w-4 h-4" />
+            {shareRewardLoading ? '공유 여는 중...' : '앱 공유하고 질문권 1개 받기'}
+          </button>
           {QUESTION_PASS_PACKAGES.map((pkg) => (
             <button
               key={pkg.count}
