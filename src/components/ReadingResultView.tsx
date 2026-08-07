@@ -1113,17 +1113,31 @@ function generateDailyTemperatureReading(card: TarotCard | undefined): StandardR
     .trim();
 
   const oneLineConclusion = clean(`오늘 우리 사이 온도는 ${temperature}도예요. ${tempMood}예요.`);
+  const temperatureFlowLine = temperature >= 37.2
+    ? '따뜻함은 살아 있지만, 그 온도를 오래 유지하려면 부담 없이 다루는 게 중요해요.'
+    : temperature >= 36.6
+      ? '아주 뜨겁게 치솟는 날은 아니어도, 서로를 살피는 온기는 분명히 남아 있어요.'
+      : temperature >= 36.1
+        ? '오늘은 온기가 약하게 이어지는 편이라, 서두르기보다 편안하게 살피는 쪽이 좋아요.'
+        : '오늘은 체감 온도가 낮은 편이라, 관계를 끌어올리기보다 무리 없이 지켜보는 쪽이 좋아요.';
+  const temperatureCautionLine = temperature >= 37.2
+    ? '좋은 온도가 느껴져도 바로 확답을 요구하면 분위기가 무거워질 수 있어요.'
+    : temperature >= 36.6
+      ? '온기가 남아 있는 만큼 작은 반응을 너무 크게 재단하지 않는 게 좋아요.'
+      : temperature >= 36.1
+        ? '반응이 작다고 해서 마음 전체를 낮게 단정하면 질문자님 마음이 먼저 지칠 수 있어요.'
+        : '거리감이 느껴져도 한 번의 반응만으로 관계 전체를 끝처럼 보지는 마세요.';
   const card1Meaning = clean(fiveLines([
     `오늘 우리 사이 온도는 ${temperature}도예요.`,
     base.mood,
     reversedSoftener.mood,
-    temperature >= 37.2 ? '따뜻함은 살아 있지만, 그 온도를 오래 유지하려면 부담 없이 다루는 게 중요해요.' : '온도가 낮게 느껴져도 관계가 바로 끊긴 뜻은 아니고, 지금은 속도를 낮춰 살피는 쪽에 가까워요.',
+    temperatureFlowLine,
     '오늘은 작은 말투와 반응의 편안함이 관계 분위기를 크게 바꿀 수 있어요.',
   ]));
   const caution = clean(fiveLines([
     base.caution,
     reversedSoftener.caution,
-    temperature >= 37.2 ? '좋은 온도가 느껴져도 바로 확답을 요구하면 분위기가 무거워질 수 있어요.' : '반응이 작다고 해서 마음 전체를 낮게 단정하면 질문자님 마음이 먼저 지칠 수 있어요.',
+    temperatureCautionLine,
     '오늘은 확인하려는 말보다 상대가 편하게 답할 수 있는 공기가 더 중요해요.',
     '한 번의 답장, 한 번의 표정만으로 결론내리지 않는 게 좋아요.',
   ]));
